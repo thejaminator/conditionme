@@ -1,7 +1,6 @@
 [project]
 name = "conditionme"
 version = "0.0.1"
-homepage = "https://github.com/thejaminator/conditionme"
 description = "A library for finetuning language models via decision transformer / conditioning / upside-down reinforcement learning!"
 authors = [
     { name = "James Chua", email = "chuajamessh@gmail.com"}
@@ -15,8 +14,4 @@ classifiers=[
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
-]
-packages = [
-    { include = "conditionme" },
-    { include = "tests", format = "sdist" },
 ]
