@@ -19,6 +19,3 @@ packages = [
     { include = "conditionme" },
     { include = "tests", format = "sdist" },
 ]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
