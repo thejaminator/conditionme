@@ -67,7 +67,8 @@ def tokenize(examples: LazyBatch) -> BatchEncoding:
     new_text = [eos_token + text for text in examples["text"]]
     tokenizer_result = tokenizer(new_text, truncation=True)
     # add the precomputed reward to the result
-    tokenizer_result["reward"] = examples["reward"]
+    tokenizer_result["target_reward"] = examples["target_reward"]
+    tokenizer_result["labels"] = tokenizer_result["input_ids"].copy()
     return tokenizer_result
 
 
@@ -85,14 +86,16 @@ def main():
     sentiment_reward = Rewarder(device=device)
     dataset_tokenized = imdb_dataset_limited.map(
         # batched
-        lambda examples: {"reward": sentiment_reward.reward_batch(examples["text"])},
+        lambda examples: {
+            "target_reward": sentiment_reward.reward_batch(examples["text"])
+        },
         batched=True,
         batch_size=16,
     ).map(
         tokenize,
         batched=True,
     )
-    dataset_tokenized.set_format(type="torch", columns=["input_ids", "reward"])
+    dataset_tokenized.set_format(type="torch", columns=["input_ids", "target_reward", "labels"])
     print("ok")
 
     # Train the model using the device
