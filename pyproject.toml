@@ -15,5 +15,10 @@ classifiers=[
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
 ]
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+    "datasets>=1.17.0",
+    "torch>=1.4.0",
+    "tqdm",
+    "transformers",
+    "accelerate"
+]
