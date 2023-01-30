@@ -1,0 +1,24 @@
+[project]
+name = "conditionme"
+version = "0.0.1"
+homepage = "https://github.com/thejaminator/conditionme"
+description = "A library for finetuning language models via decision transformer / conditioning / upside-down reinforcement learning!"
+authors = ["James Chua <chuajamessh@gmail.com>"]
+readme = "README.md"
+license =  "MIT"
+classifiers=[
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT License',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+]
+packages = [
+    { include = "conditionme" },
+    { include = "tests", format = "sdist" },
+]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

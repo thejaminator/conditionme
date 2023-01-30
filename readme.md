@@ -3,8 +3,8 @@ conditionme is library for easily retraining existing language models to work in
 Inspired by trl
 
 ## Test it out
-Install via the git url
+Install via the git url of the main branch of git@github.com:thejaminator/conditionme.git
 ```bash
-git clone 
+pip install git+https://github.com/thejaminator/conditionme.git#egg=conditionme
 ```
 
