@@ -1,6 +1,8 @@
 """
 Trains GPT2 on IMDB dataset
 """
+from typing import List
+
 import torch
 from datasets import load_dataset
 from datasets.formatting.formatting import LazyBatch
@@ -12,7 +14,10 @@ from transformers import (
     AutoModelForCausalLM,
     TrainingArguments,
     Trainer,
+    GPT2LMHeadModel,
 )
+
+from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
 eos_token: str = tokenizer.eos_token
@@ -42,7 +47,7 @@ class Rewarder:
         assert len(rewards) == 1
         return rewards[0]
 
-    def reward_batch(self, texts: list[str], batch_size: int = 16) -> list[float]:
+    def reward_batch(self, texts: List[str], batch_size: int = 16) -> List[float]:
         """
         Computes the reward for a batch of texts
         """
@@ -71,7 +76,7 @@ def main():
     imdb_dataset = load_dataset("imdb")
     # limit the dataset to 100 examples
     limit = 100
-    imdb_dataset_limited = imdb_dataset["train"].select(range(100))
+    imdb_dataset_limited = imdb_dataset["train"].select(range(limit))
     # compute the reward for each example
     # prefer gpu if available
     device: torch.device = (
@@ -87,11 +92,14 @@ def main():
         tokenize,
         batched=True,
     )
-    dataset_tokenized.set_format(type="torch")
+    dataset_tokenized.set_format(type="torch", columns=["input_ids", "reward"])
     print("ok")
 
     # Train the model using the device
-    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
+    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained("gpt2").to(
+        device
+    )
+    model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
     training_args = TrainingArguments(
         output_dir="./gpt2-imdb",
         overwrite_output_dir=True,

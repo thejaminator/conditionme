@@ -7,8 +7,8 @@ from torch.nn import CrossEntropyLoss
 from transformers import GenerationMixin, GPT2LMHeadModel, GPT2Model
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
-import decision.modified_gpt2_forward
-from decision.logger import logger
+import conditionme.modified_gpt2_forward
+from conditionme.logger import logger
 
 
 class ModifiedGPT2LMHeadModel(nn.Module, GenerationMixin):
@@ -67,7 +67,7 @@ class ModifiedGPT2LMHeadModel(nn.Module, GenerationMixin):
         )
 
         transformer_outputs = (
-            decision.modified_gpt2_forward.modfied_transformer_forward(
+            conditionme.modified_gpt2_forward.modfied_transformer_forward(
                 target_reward=target_reward,
                 transformer_model=self.existing_head_model.transformer,
                 input_ids=input_ids,

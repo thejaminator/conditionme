@@ -4,7 +4,7 @@ import torch
 from transformers import GPT2Model
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
-from decision.logger import logger
+from conditionme.logger import logger
 
 
 def modfied_transformer_forward(
