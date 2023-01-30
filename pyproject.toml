@@ -5,7 +5,6 @@ homepage = "https://github.com/thejaminator/conditionme"
 description = "A library for finetuning language models via decision transformer / conditioning / upside-down reinforcement learning!"
 authors = ["James Chua <chuajamessh@gmail.com>"]
 readme = "readme.md"
-license = "MIT"
 classifiers=[
     'Development Status :: 2 - Pre-Alpha',
     'Intended Audience :: Developers',
