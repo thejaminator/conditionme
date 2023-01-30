@@ -73,7 +73,11 @@ def main():
     limit = 100
     imdb_dataset_limited = imdb_dataset["train"].select(range(100))
     # compute the reward for each example
-    sentiment_reward = Rewarder(device=torch.device("cpu"))
+    # prefer gpu if available
+    device: torch.device = (
+        torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    )
+    sentiment_reward = Rewarder(device=device)
     dataset_tokenized = imdb_dataset_limited.map(
         # batched
         lambda examples: {"reward": sentiment_reward.reward_batch(examples["text"])},
@@ -86,8 +90,8 @@ def main():
     dataset_tokenized.set_format(type="torch")
     print("ok")
 
-    # Train the model
-    model = AutoModelForCausalLM.from_pretrained("gpt2")
+    # Train the model using the device
+    model = AutoModelForCausalLM.from_pretrained("gpt2").to(device)
     training_args = TrainingArguments(
         output_dir="./gpt2-imdb",
         overwrite_output_dir=True,
