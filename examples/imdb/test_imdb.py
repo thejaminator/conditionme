@@ -2,6 +2,7 @@ from typing import List
 
 import torch
 import typer
+from datasets import Dataset, load_dataset
 from transformers import GPT2LMHeadModel, AutoModelForCausalLM, AutoTokenizer
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
@@ -10,7 +11,11 @@ from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
 )
 from examples.imdb.imdb_reward_model import ImdbRewardModel
-from examples.imdb.train_imdb import tokenize_imdb, preprocessed_dataset_path, try_load_preprocessed_dataset
+from examples.imdb.train_imdb import (
+    tokenize_imdb,
+    preprocessed_dataset_path,
+    try_load_preprocessed_dataset,
+)
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme"):
@@ -29,7 +34,9 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
 
-    dataset_tokenized: Dataset = try_load_preprocessed_dataset() or imdb_dataset.map(  # type: ignore
+    dataset_tokenized: Dataset = try_load_preprocessed_dataset() or load_dataset(  # type: ignore [assignment]
+        "imdb"
+    ).map(
         # batched
         lambda examples: {
             "target_reward": sentiment_reward.reward_batch(
@@ -48,7 +55,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
 
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
-        text.split(" ") for text in dataset_tokenized["test"]["text"]
+        text.split(" ") for text in dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     ]
     # take the first 3 tokens from each list
     first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
