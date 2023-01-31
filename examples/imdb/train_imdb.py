@@ -37,7 +37,7 @@ def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncodi
     return tokenizer_result
 
 
-def main(batch_size: int):
+def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     # Optionally save to drive
     # from google.colab import drive
     # drive.mount('/content/gdrive')
@@ -55,7 +55,7 @@ def main(batch_size: int):
     eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
-    dataset_tokenized: Dataset = imdb_dataset.map( # type: ignore
+    dataset_tokenized: Dataset = imdb_dataset.map(  # type: ignore
         # batched
         lambda examples: {
             "target_reward": sentiment_reward.reward_batch(examples["text"])
@@ -78,7 +78,7 @@ def main(batch_size: int):
     model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
 
     training_args = TrainingArguments(
-        output_dir="gdrive/My Drive/conditionme",
+        output_dir=save_dir,
         overwrite_output_dir=True,
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
@@ -94,7 +94,7 @@ def main(batch_size: int):
     trainer.train()
 
     # Save the model
-    trainer.save_model("gdrive/My Drive/conditionme")
+    trainer.save_model(save_dir)
 
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
@@ -135,4 +135,6 @@ def main(batch_size: int):
 
 
 if __name__ == "__main__":
+    # run with
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py
     typer.run(main)
