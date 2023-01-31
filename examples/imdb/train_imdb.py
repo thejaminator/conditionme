@@ -47,7 +47,7 @@ def main():
     # compute the reward for each example
     # prefer gpu if available
     device: torch.device = (
-        torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -87,7 +87,7 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset_tokenized,
+        train_dataset=dataset_tokenized["train"],
         tokenizer=tokenizer,
     )
     trainer.train()
@@ -95,7 +95,6 @@ def main():
     # Save the model
     trainer.save_model("gdrive/My Drive/conditionme")
 
-    # Take 500 test set
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
         text.split(" ") for text in dataset_tokenized["text"]

@@ -23,7 +23,7 @@ def complete_text_with_reward(
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
-) -> str:
+) -> PromptCompletion:
     device: torch.device = model.device  # type: ignore
     prompt_with_bos = f"{tokenizer.bos_token}{prompt}"
     query_tensor: torch.tensor = tokenizer.encode(prompt_with_bos, return_tensors="pt").to(device)  # type: ignore
@@ -39,7 +39,9 @@ def complete_text_with_reward(
     flattened_sequence = generated_sequence.flatten()
     # convert to text
     generated_text: str = tokenizer.decode(flattened_sequence)
-    return generated_text
+    # remove the prompt
+    completion: str = generated_text[len(prompt_with_bos) :]
+    return PromptCompletion(prompt=prompt, completion=completion)
 
 
 def complete_text_with_reward_batched(
@@ -48,6 +50,7 @@ def complete_text_with_reward_batched(
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
+    # todo: add StoppingCriteria max length
 ) -> List[PromptCompletion]:
     device: torch.device = model.device  # type: ignore
     # for each prompt, add the bos token
