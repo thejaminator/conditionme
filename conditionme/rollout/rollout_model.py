@@ -37,6 +37,10 @@ class PromptCompletion:
     prompt: str
     completion: str
 
+    @property
+    def prompt_completion(self) -> str:
+        return f"{self.prompt}{self.completion}"
+
 
 def complete_text_with_reward_batched(
     prompt: List[str],

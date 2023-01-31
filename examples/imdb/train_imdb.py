@@ -1,6 +1,7 @@
 """
 Trains GPT2 on IMDB dataset
 """
+from typing import List
 
 import torch
 from datasets import load_dataset
@@ -15,6 +16,10 @@ from transformers import (
 )
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.rollout.rollout_model import (
+    complete_text_with_reward_batched,
+    PromptCompletion,
+)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 
 
@@ -32,8 +37,12 @@ def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncodi
 
 
 def main():
+    # Optionally save to drive
+    # from google.colab import drive
+    # drive.mount('/content/gdrive')
+
     # Download and tokenize the dataset
-    imdb_dataset = load_dataset("")
+    imdb_dataset = load_dataset("imdb")
     # limit the dataset to 100 examples
     limit = 100
     imdb_dataset_limited = imdb_dataset["train"].select(range(limit))
@@ -69,9 +78,6 @@ def main():
     )
     model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
 
-    # Optionally save to drive
-    # from google.colab import drive
-    # drive.mount('/content/gdrive')
     training_args = TrainingArguments(
         output_dir="gdrive/My Drive/conditionme",
         overwrite_output_dir=True,
@@ -87,6 +93,47 @@ def main():
         tokenizer=tokenizer,
     )
     trainer.train()
+
+    # Save the model
+    trainer.save_model("gdrive/My Drive/conditionme")
+
+    # Take 500 test set
+    # convert into a list of space separated tokens
+    test_text_tokenized: List[List[str]] = [
+        text.split(" ") for text in dataset_tokenized["text"]
+    ]
+    # take the first 3 tokens from each list
+    first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
+    # join the first 3 tokens into a string
+    first_3_tokens: List[str] = [" ".join(text) for text in first_3_tokens_list]
+    # complete the text
+    high_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
+        prompt=first_3_tokens,
+        model=model,
+        tokenizer=tokenizer,
+        target_reward=[1.0] * len(first_3_tokens),
+    )
+    low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
+        prompt=first_3_tokens,
+        model=model,
+        tokenizer=tokenizer,
+        target_reward=[0.0] * len(first_3_tokens),
+    )
+
+    # Use the reward model to compute the actual reward of the completions
+    high_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
+        [completion.prompt_completion for completion in high_reward_completions]
+    )
+    low_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
+        [completion.prompt_completion for completion in low_reward_completions]
+    )
+    # print the average
+    print(
+        f"Average reward of high reward completions: {sum(high_reward_completions_reward) / len(high_reward_completions_reward)}"
+    )
+    print(
+        f"Average reward of low reward completions: {sum(low_reward_completions_reward) / len(low_reward_completions_reward)}"
+    )
 
 
 if __name__ == "__main__":

@@ -4,3 +4,4 @@ tqdm
 transformers
 accelerate
 pytest==7.2.1
+mypy==0.991
