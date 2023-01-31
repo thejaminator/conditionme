@@ -1,7 +1,7 @@
 """
 Trains GPT2 on IMDB dataset
 """
-from typing import List
+from typing import List, Optional
 import typer
 
 import torch
@@ -37,6 +37,17 @@ def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncodi
     return tokenizer_result
 
 
+preprocessed_dataset_path = "dataset_tokenized_imdb.hf"
+
+
+def try_load_preprocessed_dataset() -> Optional[Dataset]:
+    try:
+        dataset_tokenized = Dataset.from_file(preprocessed_dataset_path)
+        return dataset_tokenized
+    except FileNotFoundError:
+        return None
+
+
 def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     # Optionally save to drive
     # from google.colab import drive
@@ -55,19 +66,23 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
-    dataset_tokenized: Dataset = imdb_dataset.map(  # type: ignore
+    dataset_tokenized: Dataset = try_load_preprocessed_dataset() or imdb_dataset.map(  # type: ignore
         # batched
         lambda examples: {
-            "target_reward": sentiment_reward.reward_batch(examples["text"], batch_size=32)
+            "target_reward": sentiment_reward.reward_batch(
+                examples["text"], batch_size=32
+            )
         },
         batched=True,
     ).map(
         lambda x: tokenize_imdb(x, eos_token, tokenizer),
         batched=True,
     )
+    dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
         type="torch", columns=["input_ids", "target_reward", "labels"]
     )
+
     print("ok")
 
     # Train the model using the device
