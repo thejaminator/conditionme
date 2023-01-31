@@ -73,7 +73,6 @@ def test_gpt_sanity():
         model=model,
         tokenizer=tokenizer,
     )
-    print(completion)
     # Take 500 test set text
     test_text: List[str] = huggingface_dataset["text"][:500]
     # convert into a list of space separated tokens

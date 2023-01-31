@@ -1,6 +1,6 @@
 import os
 from logging import Logger
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Callable
 
 import torch
 from torch import nn
@@ -38,6 +38,8 @@ class ModifiedGPT2LMHeadModel(
         self.logger = logger
         self.reward_handler = reward_handler
         self.config = existing_head_model.config
+        # So that huggingface `Trainer` will be able to save the model using `save_pretrained`
+        self.module = self.existing_head_model
 
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method
@@ -55,12 +57,34 @@ class ModifiedGPT2LMHeadModel(
         cls,
         pretrained_model_name_or_path: Optional[Union[str, os.PathLike]],
         *model_args,
-        **kwargs
+        **kwargs,
     ):
         loaded_head_model = GPT2LMHeadModel.from_pretrained(
             pretrained_model_name_or_path, *model_args, **kwargs
         )
         return cls(loaded_head_model)
+
+    def save_pretrained(
+        self,
+        save_directory: Union[str, os.PathLike],
+        is_main_process: bool = True,
+        state_dict: Optional[dict] = None,
+        save_function: Callable = torch.save,
+        push_to_hub: bool = False,
+        max_shard_size: Union[int, str] = "10GB",
+        safe_serialization: bool = False,
+        **kwargs,
+    ):
+        self.existing_head_model.save_pretrained(
+            save_directory=save_directory,
+            is_main_process=is_main_process,
+            state_dict=state_dict,
+            save_function=save_function,
+            push_to_hub=push_to_hub,
+            max_shard_size=max_shard_size,
+            safe_serialization=safe_serialization,
+            **kwargs,
+        )
 
     # For GenerationMixin
     def can_generate(self, **kwargs):

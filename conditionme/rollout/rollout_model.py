@@ -11,7 +11,8 @@ def complete_text_with_reward(
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
-    max_length: Optional[int] = None,
+    # max int
+    max_length: int = 9999999999,
 ) -> str:
     device = model.device
     query_tensor = tokenizer.encode(prompt, return_tensors="pt").to(device)  # type: ignore
