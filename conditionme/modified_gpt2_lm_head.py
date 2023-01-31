@@ -38,8 +38,6 @@ class ModifiedGPT2LMHeadModel(
         self.logger = logger
         self.reward_handler = reward_handler
         self.config = existing_head_model.config
-        # So that huggingface `Trainer` will be able to save the model using `save_pretrained`
-        self.module = self.existing_head_model
 
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method

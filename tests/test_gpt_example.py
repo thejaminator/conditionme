@@ -12,7 +12,8 @@ from transformers import (
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
-    complete_text_with_reward_batched, PromptCompletion,
+    complete_text_with_reward_batched,
+    PromptCompletion,
 )
 from examples.imdb.train_imdb import tokenize_imdb
 
@@ -62,14 +63,12 @@ def test_gpt_sanity():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset_tokenized,
+        train_dataset=dataset_tokenized,  # TODO: Make trainer call from_pretrained properly
         tokenizer=tokenizer,
     )
-    trainer.save_model("test_gpt_sanity")
-
-    # Reload the model
-    model = ModifiedGPT2LMHeadModel.from_pretrained("test_gpt_sanity")
-    model.to(device)
+    trainer.train()
+    model.save_pretrained("test_gpt_sanity")
+    new_model = ModifiedGPT2LMHeadModel.from_pretrained("test_gpt_sanity")
 
 
 def test_complete_text_with_reward_batched():
@@ -108,6 +107,3 @@ def test_complete_text_with_reward_batched():
         target_reward=[1.0] * len(first_3_tokens),
     )
     assert len(completions) == len(test_text_tokenized)
-
-
-
