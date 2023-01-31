@@ -4,7 +4,7 @@ Trains GPT2 on IMDB dataset
 from typing import List
 
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from datasets.formatting.formatting import LazyBatch
 from transformers import (
     AutoTokenizer,
@@ -44,8 +44,6 @@ def main():
     # Download and tokenize the dataset
     imdb_dataset = load_dataset("imdb")
     # limit the dataset to 100 examples
-    limit = 100
-    imdb_dataset_limited = imdb_dataset["train"].select(range(limit))
     # compute the reward for each example
     # prefer gpu if available
     device: torch.device = (
@@ -56,7 +54,7 @@ def main():
     eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
-    dataset_tokenized = imdb_dataset_limited.map(
+    dataset_tokenized: Dataset = imdb_dataset.map( # type: ignore
         # batched
         lambda examples: {
             "target_reward": sentiment_reward.reward_batch(examples["text"])

@@ -12,7 +12,7 @@ from transformers import (
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
-    complete_text_with_reward_batched,
+    complete_text_with_reward_batched, PromptCompletion,
 )
 from examples.imdb.train_imdb import tokenize_imdb
 
@@ -101,7 +101,7 @@ def test_complete_text_with_reward_batched():
     # join the first 3 tokens into a string
     first_3_tokens: List[str] = [" ".join(text) for text in first_3_tokens_list]
     # complete the text
-    completions: List[str] = complete_text_with_reward_batched(
+    completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,

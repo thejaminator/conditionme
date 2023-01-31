@@ -1,3 +1,4 @@
+import typing
 from logging import Logger
 from typing import Optional, Tuple
 
@@ -7,7 +8,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttenti
 
 from conditionme.reward_handler import RewardHandler
 
-
+@typing.no_type_check
 def modfied_transformer_forward(
     target_reward: torch.Tensor,  # same len as input_ids
     transformer_model: GPT2Model,
