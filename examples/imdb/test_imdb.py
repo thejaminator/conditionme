@@ -1,10 +1,14 @@
 from typing import List
 
 import torch
+import typer
 from transformers import GPT2LMHeadModel, AutoModelForCausalLM, Trainer, AutoTokenizer
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
-from conditionme.rollout.rollout_model import PromptCompletion, complete_text_with_reward_batched
+from conditionme.rollout.rollout_model import (
+    PromptCompletion,
+    complete_text_with_reward_batched,
+)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.train_imdb import tokenize_imdb, preprocessed_dataset_path
 
@@ -42,7 +46,6 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
         type="torch", columns=["input_ids", "target_reward", "labels"]
     )
 
-
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
         text.split(" ") for text in dataset_tokenized["test"]["text"]
@@ -79,3 +82,9 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
     print(
         f"Average reward of low reward completions: {sum(low_reward_completions_reward) / len(low_reward_completions_reward)}"
     )
+
+
+if __name__ == "__main__":
+    # run with
+    # export PYTHONPATH=.; python examples/imdb/test_imdb.py
+    typer.run(main)
