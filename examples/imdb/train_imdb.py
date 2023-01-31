@@ -112,7 +112,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
 
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
-        text.split(" ") for text in dataset_tokenized["text"]
+        text.split(" ") for text in dataset_tokenized["test"]["text"]  # type: ignore
     ]
     # take the first 3 tokens from each list
     first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
