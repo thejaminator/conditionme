@@ -1,3 +1,4 @@
+import dataclasses
 from typing import List, Optional
 
 import torch
@@ -31,13 +32,19 @@ def complete_text_with_reward(
     return generated_text
 
 
+@dataclasses.dataclass
+class PromptCompletion:
+    prompt: str
+    completion: str
+
+
 def complete_text_with_reward_batched(
     prompt: List[str],
     target_reward: List[float],
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
-) -> List[str]:
+) -> List[PromptCompletion]:
     device = model.device
     # for each prompt, add the bos token
     prompt_with_bos = [f"{tokenizer.bos_token}{p}" for p in prompt]
@@ -56,5 +63,12 @@ def complete_text_with_reward_batched(
     # generated sequence
     generated_sequence = generation_output["sequences"]
     # convert to text
-    generated_text: List[str] = tokenizer.batch_decode(generated_sequence)
-    return generated_text
+    generated_text: List[str] = tokenizer.batch_decode(
+        generated_sequence, skip_special_tokens=True
+    )
+    # split the generated text into the prompt and the completion
+    prompt_completion: List[PromptCompletion] = []
+    for i, prompt in enumerate(prompt):
+        completion = generated_text[i].lstrip(prompt)
+        prompt_completion.append(PromptCompletion(prompt=prompt, completion=completion))
+    return prompt_completion

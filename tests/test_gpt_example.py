@@ -12,10 +12,9 @@ from transformers import (
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
-    complete_text_with_reward,
     complete_text_with_reward_batched,
 )
-from examples.train_imdb import tokenize_imdb
+from examples.imdb.train_imdb import tokenize_imdb
 
 
 def test_gpt_sanity():
@@ -29,9 +28,12 @@ def test_gpt_sanity():
         "target_reward": [0.1, 0.2, 0.3],
     }
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
-    tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
+    tokenizer = AutoTokenizer.from_pretrained(
+        "sshleifer/tiny-gpt2", padding_side="left"
+    )
     eos_token: str = tokenizer.eos_token
     tokenizer.pad_token = tokenizer.eos_token
+
     # tokenize the dataset
     dataset_tokenized = huggingface_dataset.map(
         lambda examples: tokenize_imdb(examples, eos_token, tokenizer),
