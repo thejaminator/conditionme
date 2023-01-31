@@ -32,7 +32,7 @@ def complete_text_with_reward(
 
 
 def complete_text_with_reward_batched(
-    prompt_with_bos: List[str],
+    prompt: List[str],
     target_reward: List[float],
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
@@ -40,14 +40,15 @@ def complete_text_with_reward_batched(
 ) -> List[str]:
     device = model.device
     # for each prompt, add the bos token
-    prompt_with_bos = [f"{tokenizer.bos_token}{p}" for p in prompt_with_bos]
+    prompt_with_bos = [f"{tokenizer.bos_token}{p}" for p in prompt]
     prompt_encoding: BatchEncoding = tokenizer.batch_encode_plus(prompt_with_bos, return_tensors="pt", padding=True, return_attention_mask=True).to(device)  # type: ignore
     input_ids: torch.Tensor = prompt_encoding["input_ids"]
     attention_mask: torch.Tensor = prompt_encoding["attention_mask"]
     generation_output = model.generate(
         input_ids=input_ids,
         attention_mask=attention_mask,
-        target_reward=target_reward,
+        # convert to tensor
+        target_reward=torch.tensor(target_reward).to(device),
         return_dict_in_generate=True,
         output_scores=True,
         temperature=temperature,

@@ -100,9 +100,9 @@ def test_complete_text_with_reward_batched():
     first_3_tokens: List[str] = [" ".join(text) for text in first_3_tokens_list]
     # complete the text
     completions: List[str] = complete_text_with_reward_batched(
-        prompt_with_bos=first_3_tokens,
+        prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=1.0,
+        target_reward=[1.0, 0.5, 0.2],
     )
     assert len(completions) == len(test_text_tokenized)
