@@ -23,11 +23,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
     # Load the model using the device
-    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(save_dir).to(
-        device
-    )
-
-    model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
+    model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     eos_token: str = tokenizer.eos_token
