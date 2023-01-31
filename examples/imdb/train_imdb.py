@@ -62,7 +62,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
     sentiment_reward = ImdbRewardModel(device=device)
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token

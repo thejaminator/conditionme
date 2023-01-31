@@ -25,7 +25,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
     # Load the model using the device
     model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
     sentiment_reward = ImdbRewardModel(device=device)
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
