@@ -2,6 +2,7 @@
 Trains GPT2 on IMDB dataset
 """
 from typing import List
+import typer
 
 import torch
 from datasets import load_dataset, Dataset
@@ -36,7 +37,7 @@ def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncodi
     return tokenizer_result
 
 
-def main():
+def main(batch_size: int):
     # Optionally save to drive
     # from google.colab import drive
     # drive.mount('/content/gdrive')
@@ -80,7 +81,7 @@ def main():
         output_dir="gdrive/My Drive/conditionme",
         overwrite_output_dir=True,
         num_train_epochs=1,
-        per_device_train_batch_size=16,
+        per_device_train_batch_size=batch_size,
         save_steps=10_000,
         save_total_limit=2,
     )
@@ -134,4 +135,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
