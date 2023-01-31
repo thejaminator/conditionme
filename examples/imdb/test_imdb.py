@@ -2,7 +2,7 @@ from typing import List
 
 import torch
 import typer
-from transformers import GPT2LMHeadModel, AutoModelForCausalLM, Trainer, AutoTokenizer
+from transformers import GPT2LMHeadModel, AutoModelForCausalLM, AutoTokenizer
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
@@ -10,7 +10,7 @@ from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
 )
 from examples.imdb.imdb_reward_model import ImdbRewardModel
-from examples.imdb.train_imdb import tokenize_imdb, preprocessed_dataset_path
+from examples.imdb.train_imdb import tokenize_imdb, preprocessed_dataset_path, try_load_preprocessed_dataset
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme"):
