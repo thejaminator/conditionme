@@ -58,10 +58,9 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     dataset_tokenized: Dataset = imdb_dataset.map(  # type: ignore
         # batched
         lambda examples: {
-            "target_reward": sentiment_reward.reward_batch(examples["text"])
+            "target_reward": sentiment_reward.reward_batch(examples["text"], batch_size=32)
         },
         batched=True,
-        batch_size=16,
     ).map(
         lambda x: tokenize_imdb(x, eos_token, tokenizer),
         batched=True,
