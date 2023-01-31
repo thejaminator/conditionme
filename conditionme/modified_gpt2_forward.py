@@ -1,15 +1,18 @@
+from logging import Logger
 from typing import Optional, Tuple
 
 import torch
 from transformers import GPT2Model
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
-from conditionme.logger import logger
+from conditionme.reward_handler import RewardHandler
 
 
 def modfied_transformer_forward(
-    target_reward: float,
+    target_reward: torch.Tensor,  # same len as input_ids
     transformer_model: GPT2Model,
+    reward_handler: RewardHandler,
+    logger: Logger,
     input_ids: torch.LongTensor,
     past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
     attention_mask: Optional[torch.FloatTensor] = None,
@@ -135,11 +138,10 @@ def modfied_transformer_forward(
         inputs_embeds = transformer_model.wte(input_ids)
     position_embeds = transformer_model.wpe(position_ids)
     hidden_states = inputs_embeds + position_embeds
-    # the first token (eos) will have the target_reward added to it
-    # Add the target_reward to the last dimension of hidden_states, of the first token
-    modified_hidden_states = hidden_states.clone()
-    modified_hidden_states[:, 0, -1] += target_reward
-    hidden_states = modified_hidden_states
+    # Call the reward_handler
+    hidden_states = reward_handler.handle_reward(
+        target_reward=target_reward, hidden_states=hidden_states
+    )
 
     if token_type_ids is not None:
         token_type_embeds = transformer_model.wte(token_type_ids)

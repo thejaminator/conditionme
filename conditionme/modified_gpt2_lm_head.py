@@ -1,25 +1,43 @@
+import os
 from logging import Logger
 from typing import Optional, Tuple, Union
 
 import torch
-from torch import nn, Tensor
+from torch import nn
 from torch.nn import CrossEntropyLoss
-from transformers import GenerationMixin, GPT2LMHeadModel, GPT2Model
+from transformers import (
+    GPT2LMHeadModel,
+    PreTrainedModel,
+    GPT2Config,
+    load_tf_weights_in_gpt2,
+    GenerationMixin,
+)
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
+from transformers.modeling_utils import ModuleUtilsMixin
+from transformers.utils import PushToHubMixin
 
 import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
+from conditionme.reward_handler import RewardHandler, DefaultRewardHandler
 
 
-class ModifiedGPT2LMHeadModel(nn.Module, GenerationMixin):
-    def __init__(self, existing_head_model: GPT2LMHeadModel, logger: Logger = logger):
+class ModifiedGPT2LMHeadModel(
+    nn.Module, ModuleUtilsMixin, PushToHubMixin, GenerationMixin
+):
+    # todo: We need to inherit PreTrainedModel to work with the trainer properly. but now we don't actually need
+    def __init__(
+        self,
+        existing_head_model: GPT2LMHeadModel,
+        logger: Logger = logger,
+        reward_handler: RewardHandler = DefaultRewardHandler(),
+    ):
         super().__init__()
         self.existing_head_model: GPT2LMHeadModel = existing_head_model
-        self.existing_transformer_model: GPT2Model = existing_head_model.transformer
-        self.config = existing_head_model.config
         self.generation_config = existing_head_model.generation_config
         self.main_input_name = existing_head_model.main_input_name
-        self.device = existing_head_model.device
+        self.logger = logger
+        self.reward_handler = reward_handler
+        self.config = existing_head_model.config
 
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method
@@ -31,6 +49,18 @@ class ModifiedGPT2LMHeadModel(nn.Module, GenerationMixin):
         )
         final_kwargs["target_reward"] = target_reward
         return final_kwargs
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        pretrained_model_name_or_path: Optional[Union[str, os.PathLike]],
+        *model_args,
+        **kwargs
+    ):
+        loaded_head_model = GPT2LMHeadModel.from_pretrained(
+            pretrained_model_name_or_path, *model_args, **kwargs
+        )
+        return cls(loaded_head_model)
 
     # For GenerationMixin
     def can_generate(self, **kwargs):
@@ -70,6 +100,8 @@ class ModifiedGPT2LMHeadModel(nn.Module, GenerationMixin):
             conditionme.modified_gpt2_forward.modfied_transformer_forward(
                 target_reward=target_reward,
                 transformer_model=self.existing_head_model.transformer,
+                reward_handler=self.reward_handler,
+                logger=self.logger,
                 input_ids=input_ids,
                 past_key_values=past_key_values,
                 attention_mask=attention_mask,

@@ -19,10 +19,18 @@ from transformers import (
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-eos_token: str = tokenizer.eos_token
-# see https://github.com/huggingface/transformers/issues/2630
-tokenizer.pad_token = tokenizer.eos_token
+
+def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncoding:
+    # add the eos token to the start of all text
+    # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the eos token
+    # to include the reward
+    # add eos token to the end as well
+    new_text = [eos_token + text + eos_token for text in examples["text"]]
+    tokenizer_result = tokenizer(new_text, truncation=True, padding="longest")
+    # add the precomputed reward to the result
+    tokenizer_result["target_reward"] = examples["target_reward"]
+    tokenizer_result["labels"] = tokenizer_result["input_ids"].copy()
+    return tokenizer_result
 
 
 class Rewarder:
@@ -60,18 +68,6 @@ class Rewarder:
         return rewards
 
 
-def tokenize(examples: LazyBatch) -> BatchEncoding:
-    # add the eos token to the start of all text
-    # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the eos token
-    # to include the reward
-    new_text = [eos_token + text for text in examples["text"]]
-    tokenizer_result = tokenizer(new_text, truncation=True)
-    # add the precomputed reward to the result
-    tokenizer_result["target_reward"] = examples["target_reward"]
-    tokenizer_result["labels"] = tokenizer_result["input_ids"].copy()
-    return tokenizer_result
-
-
 def main():
     # Download and tokenize the dataset
     imdb_dataset = load_dataset("imdb")
@@ -84,6 +80,10 @@ def main():
         torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     )
     sentiment_reward = Rewarder(device=device)
+    tokenizer = AutoTokenizer.from_pretrained("gpt2")
+    eos_token: str = tokenizer.eos_token
+    # see https://github.com/huggingface/transformers/issues/2630
+    tokenizer.pad_token = tokenizer.eos_token
     dataset_tokenized = imdb_dataset_limited.map(
         # batched
         lambda examples: {
@@ -92,10 +92,12 @@ def main():
         batched=True,
         batch_size=16,
     ).map(
-        tokenize,
+        lambda x: tokenize_imdb(x, eos_token, tokenizer),
         batched=True,
     )
-    dataset_tokenized.set_format(type="torch", columns=["input_ids", "target_reward", "labels"])
+    dataset_tokenized.set_format(
+        type="torch", columns=["input_ids", "target_reward", "labels"]
+    )
     print("ok")
 
     # Train the model using the device
@@ -103,8 +105,12 @@ def main():
         device
     )
     model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
+
+    # Optionally save to drive
+    # from google.colab import drive
+    # drive.mount('/content/gdrive')
     training_args = TrainingArguments(
-        output_dir="./gpt2-imdb",
+        output_dir="gdrive/My Drive/conditionme",
         overwrite_output_dir=True,
         num_train_epochs=1,
         per_device_train_batch_size=16,
