@@ -66,7 +66,8 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     )
     dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_reward", "labels"]
+        type="torch",
+        columns=["input_ids", "target_reward", "labels", "target_reward_position"],
     )
 
     print("ok")
