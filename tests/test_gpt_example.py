@@ -15,7 +15,7 @@ from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
 )
-from examples.imdb.train_imdb import tokenize_imdb
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 
 
 def test_gpt_sanity():
@@ -37,11 +37,16 @@ def test_gpt_sanity():
 
     # tokenize the dataset
     dataset_tokenized = huggingface_dataset.map(
-        lambda examples: tokenize_imdb(examples, eos_token, tokenizer),
+        lambda examples: batch_tokenize_gpt2(
+            text=examples["text"],
+            target_rewards=examples["target_reward"],
+            tokenizer=tokenizer,
+        ),
         batched=True,
     )
     dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_reward", "labels"]
+        type="torch",
+        columns=["input_ids", "target_reward", "labels", "target_reward_position"],
     )
     print("ok")
     device: torch.device = torch.device("cpu")
@@ -89,7 +94,6 @@ def test_complete_text_with_reward_batched():
     model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
     tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
-    tokenizer.pad_token = tokenizer.eos_token
     # Take 500 test set
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
@@ -105,5 +109,6 @@ def test_complete_text_with_reward_batched():
         model=model,
         tokenizer=tokenizer,
         target_reward=[1.0] * len(first_3_tokens),
+        max_new_tokens=1,
     )
     assert len(completions) == len(test_text_tokenized)

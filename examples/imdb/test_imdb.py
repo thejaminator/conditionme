@@ -12,10 +12,10 @@ from conditionme.rollout.rollout_model import (
 )
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.train_imdb import (
-    tokenize_imdb,
     preprocessed_dataset_path,
     try_load_preprocessed_dataset,
 )
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme"):
@@ -26,9 +26,6 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
     model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
-    eos_token: str = tokenizer.eos_token
-    # see https://github.com/huggingface/transformers/issues/2630
-    tokenizer.pad_token = tokenizer.eos_token
 
     dataset_tokenized: Dataset = try_load_preprocessed_dataset() or load_dataset(  # type: ignore [assignment]
         "imdb"
@@ -41,7 +38,9 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
         },
         batched=True,
     ).map(
-        lambda x: tokenize_imdb(x, eos_token, tokenizer),
+        lambda x: batch_tokenize_gpt2(
+            text=x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer
+        ),
         batched=True,
     )
     dataset_tokenized.save_to_disk(preprocessed_dataset_path)

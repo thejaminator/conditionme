@@ -6,36 +6,21 @@ import typer
 
 import torch
 from datasets import load_dataset, Dataset
-from datasets.formatting.formatting import LazyBatch
 from transformers import (
     AutoTokenizer,
-    BatchEncoding,
     AutoModelForCausalLM,
     TrainingArguments,
     Trainer,
     GPT2LMHeadModel,
 )
 
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
 )
 from examples.imdb.imdb_reward_model import ImdbRewardModel
-
-
-def tokenize_imdb(examples: LazyBatch, eos_token: str, tokenizer) -> BatchEncoding:
-    # add the eos token to the start of all text
-    # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the eos token
-    # to include the reward
-    # add eos token to the end as well
-    new_text = [eos_token + text + eos_token for text in examples["text"]]
-    tokenizer_result = tokenizer(new_text, truncation=True, padding="longest")
-    # add the precomputed reward to the result
-    tokenizer_result["target_reward"] = examples["target_reward"]
-    tokenizer_result["labels"] = tokenizer_result["input_ids"].copy()
-    return tokenizer_result
-
 
 preprocessed_dataset_path = "dataset_tokenized_imdb.hf"
 
@@ -63,7 +48,6 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     )
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
-    eos_token: str = tokenizer.eos_token
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
     dataset_tokenized: Dataset = try_load_preprocessed_dataset() or imdb_dataset.map(  # type: ignore
@@ -75,7 +59,9 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         },
         batched=True,
     ).map(
-        lambda x: tokenize_imdb(x, eos_token, tokenizer),
+        lambda x: batch_tokenize_gpt2(
+            x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer
+        ),
         batched=True,
     )
     dataset_tokenized.save_to_disk(preprocessed_dataset_path)
@@ -150,5 +136,5 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
 
 if __name__ == "__main__":
     # run with
-    # export PYTHONPATH=.; python examples/imdb/train_imdb.py
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py 1
     typer.run(main)

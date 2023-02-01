@@ -6,6 +6,7 @@ from slist import Slist
 from transformers import PreTrainedTokenizerBase, BatchEncoding
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_tokenizer
 
 
 @dataclasses.dataclass
@@ -18,37 +19,27 @@ class PromptCompletion:
         return f"{self.prompt}{self.completion}"
 
 
+@dataclasses.dataclass
+class PromptWithTargetReward:
+    prompt: str
+    target_reward: float
+
+
 def complete_text_with_reward(
     prompt: str,
     target_reward: float,
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
+    max_new_tokens: int = 100,
 ) -> PromptCompletion:
-    device: torch.device = model.device  # type: ignore
-    prompt_with_bos = f"{tokenizer.bos_token}{prompt}"
-    query_tensor: torch.tensor = tokenizer.encode(prompt_with_bos, return_tensors="pt").to(device)  # type: ignore
-    generation_output = model.generate(  # type: ignore
-        inputs=query_tensor,
-        target_reward=target_reward,
-        return_dict_in_generate=True,
-        output_scores=True,
+    return __complete_text_with_reward_batched_helper(
+        prompts_and_targets=Slist([PromptWithTargetReward(prompt, target_reward)]),
+        tokenizer=tokenizer,
+        model=model,
         temperature=temperature,
-    )
-    # generated sequence
-    generated_sequence = generation_output["sequences"]
-    flattened_sequence = generated_sequence.flatten()
-    # convert to text
-    generated_text: str = tokenizer.decode(flattened_sequence)
-    # remove the prompt
-    completion: str = generated_text[len(prompt_with_bos) :]
-    return PromptCompletion(prompt=prompt, completion=completion)
-
-
-@dataclasses.dataclass
-class PromptWithTargetReward:
-    prompt: str
-    target_reward: float
+        max_new_tokens=max_new_tokens,
+    ).first_or_raise()
 
 
 def complete_text_with_reward_batched(
@@ -58,6 +49,7 @@ def complete_text_with_reward_batched(
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
     batch_size: int = 4,
+    max_new_tokens: int = 100,
 ) -> List[PromptCompletion]:
     prompts_rewards: Slist[PromptWithTargetReward] = (
         Slist(prompt)
@@ -73,6 +65,7 @@ def complete_text_with_reward_batched(
                 tokenizer=tokenizer,
                 model=model,
                 temperature=temperature,
+                max_new_tokens=max_new_tokens,
             )
         )
     return completions
@@ -83,15 +76,24 @@ def __complete_text_with_reward_batched_helper(
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float,
-) -> List[PromptCompletion]:
+    max_new_tokens: int,
+) -> Slist[PromptCompletion]:
+    # shallow copy the tokenizer to avoid unexpected side effects
+    new_tokenizer = set_up_decoder_tokenizer(tokenizer)
     device: torch.device = model.device  # type: ignore
-    # for each prompt, add the bos token
-    prompt_with_bos = [f"{tokenizer.bos_token}{p.prompt}" for p in prompts_and_targets]
-    prompt_encoding: BatchEncoding = tokenizer.batch_encode_plus(prompt_with_bos, return_tensors="pt", padding=True, return_attention_mask=True).to(device)  # type: ignore
-    input_ids: torch.Tensor = prompt_encoding["input_ids"]
-    attention_mask: torch.Tensor = prompt_encoding["attention_mask"]
+    # for each prompt, add the bos token which will be the reward token
+    encoding = batch_tokenize_gpt2(
+        text=prompts_and_targets.map(lambda x: x.prompt),
+        target_rewards=prompts_and_targets.map(lambda x: x.target_reward),
+        tokenizer=new_tokenizer,
+    )
+    encoding.to(device)
+    input_ids: torch.Tensor = encoding["input_ids"]
+    attention_mask: torch.Tensor = encoding["attention_mask"]
+    target_reward_position: torch.Tensor = encoding["target_reward_position"]
     generation_output = model.generate(  # type: ignore
         input_ids=input_ids,
+        target_reward_position=target_reward_position,
         attention_mask=attention_mask,
         # convert to tensor
         target_reward=torch.tensor(
@@ -100,15 +102,16 @@ def __complete_text_with_reward_batched_helper(
         return_dict_in_generate=True,
         output_scores=True,
         temperature=temperature,
+        max_new_tokens=max_new_tokens,
     )
     # generated sequence
-    generated_sequence = generation_output["sequences"]
+    generated_sequence = generation_output["sequences"]  # type: ignore
     # convert to text
-    generated_text: List[str] = tokenizer.batch_decode(
+    generated_text: List[str] = new_tokenizer.batch_decode(
         generated_sequence, skip_special_tokens=True
     )
     # split the generated text into the prompt and the completion
-    prompt_completion: List[PromptCompletion] = []
+    prompt_completion: Slist[PromptCompletion] = Slist()
     prompts = prompts_and_targets.map(lambda x: x.prompt)
     for i, _prompt in enumerate(prompts):
         completion = generated_text[i].lstrip(_prompt)

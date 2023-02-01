@@ -1,17 +1,18 @@
 import os
 from logging import Logger
-from typing import Optional, Tuple, Union, Callable
+from typing import Optional, Tuple, Union, Callable, List
 
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 from transformers import (
     GPT2LMHeadModel,
-    PreTrainedModel,
-    GPT2Config,
-    load_tf_weights_in_gpt2,
     GenerationMixin,
+    GenerationConfig,
+    LogitsProcessorList,
+    StoppingCriteriaList,
 )
+from transformers.generation.utils import GenerateOutput
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from transformers.modeling_utils import ModuleUtilsMixin
 from transformers.utils import PushToHubMixin
@@ -42,12 +43,18 @@ class ModifiedGPT2LMHeadModel(
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method
     def prepare_inputs_for_generation(
-        self, input_ids, target_reward: float, past_key_values=None, **kwargs
+        self,
+        input_ids,
+        target_reward: torch.Tensor,
+        target_reward_position: torch.Tensor,
+        past_key_values=None,
+        **kwargs,
     ):
         final_kwargs = self.existing_head_model.prepare_inputs_for_generation(
             input_ids=input_ids, past_key_values=past_key_values, **kwargs
         )
         final_kwargs["target_reward"] = target_reward
+        final_kwargs["target_reward_position"] = target_reward_position
         return final_kwargs
 
     @classmethod
@@ -91,6 +98,7 @@ class ModifiedGPT2LMHeadModel(
     def forward(
         self,
         target_reward: torch.Tensor,
+        target_reward_position: torch.Tensor,
         input_ids: Optional[torch.LongTensor] = None,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
@@ -121,6 +129,7 @@ class ModifiedGPT2LMHeadModel(
         transformer_outputs = (
             conditionme.modified_gpt2_forward.modfied_transformer_forward(
                 target_reward=target_reward,
+                target_reward_position=target_reward_position,
                 transformer_model=self.existing_head_model.transformer,
                 reward_handler=self.reward_handler,
                 logger=self.logger,
@@ -172,4 +181,31 @@ class ModifiedGPT2LMHeadModel(
             hidden_states=transformer_outputs.hidden_states,
             attentions=transformer_outputs.attentions,
             cross_attentions=transformer_outputs.cross_attentions,
+        )
+
+    # this breaks liskov, but it is the only way to work with to maintain compat with GenerationMixin
+    def generate(  # type: ignore
+        self,
+        target_reward: torch.Tensor,
+        target_reward_position: torch.Tensor,
+        inputs: Optional[torch.Tensor] = None,
+        generation_config: Optional[GenerationConfig] = None,
+        logits_processor: Optional[LogitsProcessorList] = None,
+        stopping_criteria: Optional[StoppingCriteriaList] = None,
+        prefix_allowed_tokens_fn: Optional[
+            Callable[[int, torch.Tensor], List[int]]
+        ] = None,
+        synced_gpus: Optional[bool] = False,
+        **kwargs,
+    ) -> Union[GenerateOutput, torch.LongTensor]:
+        return super().generate(
+            target_reward=target_reward,
+            target_reward_position=target_reward_position,
+            inputs=inputs,
+            generation_config=generation_config,
+            logits_processor=logits_processor,
+            stopping_criteria=stopping_criteria,
+            prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
+            synced_gpus=synced_gpus,
+            **kwargs,
         )
