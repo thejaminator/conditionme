@@ -27,7 +27,7 @@ preprocessed_dataset_path = "dataset_tokenized_imdb.hf"
 
 def try_load_preprocessed_dataset() -> Optional[Dataset]:
     try:
-        dataset_tokenized = Dataset.from_file(preprocessed_dataset_path)
+        dataset_tokenized = Dataset.load_from_disk(preprocessed_dataset_path)
         return dataset_tokenized
     except FileNotFoundError:
         return None
