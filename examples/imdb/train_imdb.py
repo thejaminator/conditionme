@@ -1,10 +1,10 @@
 """
 Trains GPT2 on IMDB dataset
 """
-from typing import List, Optional
-import typer
+from typing import List
 
 import torch
+import typer
 from datasets import load_dataset, Dataset
 from transformers import (
     AutoTokenizer,
@@ -16,22 +16,12 @@ from transformers import (
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
-from conditionme.rollout.rollout_model import (
-    complete_text_with_reward_batched,
-    PromptCompletion,
-)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
-
-preprocessed_dataset_path = "dataset_tokenized_imdb.hf"
-
-
-def try_load_preprocessed_dataset() -> Optional[Dataset]:
-    try:
-        dataset_tokenized = Dataset.load_from_disk(preprocessed_dataset_path)
-        return dataset_tokenized
-    except FileNotFoundError:
-        print("Preprocessed dataset not found.")
-        return None
+from examples.imdb.reload_dataset import (
+    preprocessed_dataset_path,
+    try_load_preprocessed_dataset,
+)
+from examples.imdb.test_imdb import evaluate_test_set
 
 
 def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
@@ -61,7 +51,10 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
-            x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer, add_eos_at_end=True
+            x["text"],
+            target_rewards=x["target_reward"],
+            tokenizer=tokenizer,
+            add_eos_at_end=True,
         ),
         batched=True,
     )
@@ -97,42 +90,12 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
 
     # Save the model
     trainer.save_model(save_dir)
-
-    # convert into a list of space separated tokens
-    test_text_tokenized: List[List[str]] = [
-        text.split(" ") for text in dataset_tokenized["test"]["text"]  # type: ignore
-    ]
-    # take the first 3 tokens from each list
-    first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
-    # join the first 3 tokens into a string
-    first_3_tokens: List[str] = [" ".join(text) for text in first_3_tokens_list]
-    # complete the text
-    high_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
-        prompt=first_3_tokens,
+    test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
+    evaluate_test_set(
+        test_text=test_text,
         model=model,
         tokenizer=tokenizer,
-        target_reward=[1.0] * len(first_3_tokens),
-    )
-    low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
-        prompt=first_3_tokens,
-        model=model,
-        tokenizer=tokenizer,
-        target_reward=[0.0] * len(first_3_tokens),
-    )
-
-    # Use the reward model to compute the actual reward of the completions
-    high_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
-        [completion.prompt_completion for completion in high_reward_completions]
-    )
-    low_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
-        [completion.prompt_completion for completion in low_reward_completions]
-    )
-    # print the average
-    print(
-        f"Average reward of high reward completions: {sum(high_reward_completions_reward) / len(high_reward_completions_reward)}"
-    )
-    print(
-        f"Average reward of low reward completions: {sum(low_reward_completions_reward) / len(low_reward_completions_reward)}"
+        sentiment_reward=sentiment_reward,
     )
 
 
