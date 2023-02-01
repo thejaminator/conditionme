@@ -1,7 +1,7 @@
 """
 Trains GPT2 on IMDB dataset
 """
-from typing import List
+from typing import List, Optional
 
 import torch
 import typer
@@ -41,7 +41,8 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     # see https://github.com/huggingface/transformers/issues/2630
     tokenizer.pad_token = tokenizer.eos_token
-    dataset_tokenized: Dataset = try_load_preprocessed_dataset() or imdb_dataset.map(  # type: ignore
+    cached_dataset: Optional[Dataset] = try_load_preprocessed_dataset()
+    dataset_tokenized: Dataset = cached_dataset or imdb_dataset.map(  # type: ignore
         # batched
         lambda examples: {
             "target_reward": sentiment_reward.reward_batch(
@@ -58,7 +59,9 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         ),
         batched=True,
     )
-    dataset_tokenized.save_to_disk(preprocessed_dataset_path)
+    # save the preprocessed dataset if we didn't already have it
+    if not cached_dataset:
+        dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
         type="torch",
         columns=["input_ids", "target_reward", "labels", "target_reward_position"],
