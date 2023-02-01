@@ -2,7 +2,7 @@ from copy import copy
 from typing import Sequence, List
 
 import torch
-from transformers import PreTrainedTokenizerBase, BatchEncoding
+from transformers import PreTrainedTokenizerBase, BatchEncoding, TensorType
 
 
 def set_up_decoder_tokenizer(
@@ -12,6 +12,7 @@ def set_up_decoder_tokenizer(
     new_tokenizer: PreTrainedTokenizerBase = copy(tokenizer)
     # need to manually set the pad token to the eos token
     new_tokenizer.pad_token = new_tokenizer.eos_token
+    new_tokenizer.pad_token_id = new_tokenizer.eos_token_id
     # since this is a decoder, we need to left pad to work with HF generate
     # https://github.com/huggingface/transformers/issues/3021#issuecomment-1231526631
     new_tokenizer.padding_side = "left"
@@ -39,12 +40,12 @@ def batch_tokenize_gpt2(
     tokenizer_result["labels"] = tokenizer_result["input_ids"].copy()
     attention_mask = tokenizer_result["attention_mask"]
     target_reward_position: List[int] = [x.index(1) for x in attention_mask]
-
     tokenizer_result["target_reward_position"] = target_reward_position
     # convert to tensors
+    new_dict = BatchEncoding(tensor_type=TensorType.PYTORCH)
     for key in tokenizer_result:
-        tokenizer_result[key] = torch.tensor(tokenizer_result[key])
-    return tokenizer_result
+        new_dict[key] = torch.tensor(tokenizer_result[key])
+    return new_dict
 
 
 def test_batch_tokenize_gpt2_reward_position():
@@ -54,7 +55,10 @@ def test_batch_tokenize_gpt2_reward_position():
     text = ["hello hello", "hello hello hello"]
     target_rewards = [1.0, 1.0]
     tokenizer_result = batch_tokenize_gpt2(
-        text=text, target_rewards=target_rewards, tokenizer=tokenizer, add_eos_at_end=True
+        text=text,
+        target_rewards=target_rewards,
+        tokenizer=tokenizer,
+        add_eos_at_end=True,
     )
     # the first text has two tokens, the second has three
     # so the reward token should be at position 1 for the first, and 0 for the second, after padding

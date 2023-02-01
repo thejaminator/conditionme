@@ -64,7 +64,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
         type="torch",
-        columns=["input_ids", "target_reward", "labels", "target_reward_position"],
+        columns=["input_ids", "target_reward", "labels", "target_reward_position", "attention_mask"],
     )
 
     print("ok")
@@ -99,6 +99,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         model=model,
         tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
+        limit=1000,
     )
 
 

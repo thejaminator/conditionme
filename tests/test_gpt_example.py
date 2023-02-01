@@ -47,7 +47,7 @@ def test_gpt_sanity():
     )
     dataset_tokenized.set_format(
         type="torch",
-        columns=["input_ids", "target_reward", "labels", "target_reward_position"],
+        columns=["input_ids", "target_reward", "labels", "target_reward_position", "attention_mask"],
     )
     print("ok")
     device: torch.device = torch.device("cpu")
@@ -66,10 +66,11 @@ def test_gpt_sanity():
         save_steps=1,
         save_total_limit=2,
     )
+
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset_tokenized,  # TODO: Make trainer call from_pretrained properly
+        train_dataset=dataset_tokenized,
         tokenizer=tokenizer,
     )
     trainer.train()

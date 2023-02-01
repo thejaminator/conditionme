@@ -23,9 +23,12 @@ def evaluate_test_set(
     model: GPT2LMHeadModel,
     tokenizer: AutoTokenizer,
     sentiment_reward: ImdbRewardModel,
+    limit: int,
 ):
     # convert into a list of space separated tokens
-    test_text_tokenized: List[List[str]] = [text.split(" ") for text in test_text]
+    test_text_tokenized: List[List[str]] = [
+        text.split(" ") for text in test_text[:limit]
+    ]
     # take the first 3 tokens from each list
     first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
     # join the first 3 tokens into a string
@@ -60,7 +63,7 @@ def evaluate_test_set(
     )
 
 
-def main(save_dir: str = "gdrive/My Drive/conditionme"):
+def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     device: torch.device = (
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
@@ -98,6 +101,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
         model=model,
         tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
+        limit=limit,
     )
 
 
