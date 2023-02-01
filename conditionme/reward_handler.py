@@ -28,10 +28,10 @@ class DefaultRewardHandler(RewardHandler):
         modified_hidden_states = hidden_states.clone()
         # Add the target reward to the first token
         for sequence_dim, position in enumerate(target_reward_position):
-            # Big hack to revisi to detect if we are decoding one token by one token
+            # Big hack. TODO: detect if we are decoding one token by one token in a better
             if past_length == 0:
                 modified_hidden_states[sequence_dim, position, -1] += target_reward[
                     sequence_dim
                 ]
-
+        fn = modified_hidden_states.grad_fn
         return modified_hidden_states
