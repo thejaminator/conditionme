@@ -89,7 +89,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
     trainer.train()
 
     # Save the model
-    trainer.save_model(save_dir)
+    model.save_pretrained(save_dir)
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
