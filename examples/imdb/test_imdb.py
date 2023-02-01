@@ -39,7 +39,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme"):
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
-            text=x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer
+            text=x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer, add_eos_at_end=True
         ),
         batched=True,
     )

@@ -30,6 +30,7 @@ def try_load_preprocessed_dataset() -> Optional[Dataset]:
         dataset_tokenized = Dataset.load_from_disk(preprocessed_dataset_path)
         return dataset_tokenized
     except FileNotFoundError:
+        print("Preprocessed dataset not found.")
         return None
 
 
@@ -60,7 +61,7 @@ def main(batch_size: int, save_dir: str = "gdrive/My Drive/conditionme"):
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
-            x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer
+            x["text"], target_rewards=x["target_reward"], tokenizer=tokenizer, add_eos_at_end=True
         ),
         batched=True,
     )

@@ -41,6 +41,7 @@ def test_gpt_sanity():
             text=examples["text"],
             target_rewards=examples["target_reward"],
             tokenizer=tokenizer,
+            add_eos_at_end=True,
         ),
         batched=True,
     )
