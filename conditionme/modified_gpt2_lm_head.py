@@ -19,7 +19,7 @@ from transformers.utils import PushToHubMixin
 
 import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
-from conditionme.reward_handler import RewardHandler, DefaultRewardHandler
+from conditionme.reward_handler import RewardHandler, DefaultRewardHandler, AddRewardToWholeEosHandler
 
 
 class ModifiedGPT2LMHeadModel(
@@ -30,7 +30,7 @@ class ModifiedGPT2LMHeadModel(
         self,
         existing_head_model: GPT2LMHeadModel,
         logger: Logger = logger,
-        reward_handler: RewardHandler = DefaultRewardHandler(),
+        reward_handler: RewardHandler = AddRewardToWholeEosHandler(),
     ):
         super().__init__()
         self.existing_head_model: GPT2LMHeadModel = existing_head_model
