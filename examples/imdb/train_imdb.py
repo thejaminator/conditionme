@@ -11,11 +11,14 @@ from transformers import (
     AutoModelForCausalLM,
     TrainingArguments,
     Trainer,
-    GPT2LMHeadModel, )
+    GPT2LMHeadModel,
+)
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
-from conditionme.statistics.calculate_distribution import calculate_distribution_statistics
+from conditionme.statistics.calculate_distribution import (
+    calculate_distribution_statistics,
+)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.reload_dataset import (
     preprocessed_dataset_path,
@@ -59,11 +62,12 @@ def main(
             tokenizer=tokenizer,
             add_eos_at_end=True,
         ),
+        batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
     # log training target_reward
     training_reward_dist = calculate_distribution_statistics(
-        dist=dataset_tokenized["train"]["target_reward"] # type: ignore
+        dist=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     print(f"Training target_reward distribution: {training_reward_dist}")
     # save the preprocessed dataset if we didn't already have it

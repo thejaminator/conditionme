@@ -44,6 +44,7 @@ def test_gpt_sanity():
             add_eos_at_end=True,
         ),
         batched=True,
+        batch_size=3,
     )
     dataset_tokenized.set_format(
         type="torch",
