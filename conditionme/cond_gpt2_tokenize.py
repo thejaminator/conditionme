@@ -39,6 +39,9 @@ def batch_tokenize_gpt2(
     maybe_eos: str = new_tokenizer.eos_token if add_eos_at_end else ""
     new_text = [reward_token + t + maybe_eos for t in text]
     tokenizer_result = new_tokenizer(new_text, truncation=True, padding="longest")
+    inputs_ids = tokenizer_result["input_ids"]
+    for i, input_ids in enumerate(inputs_ids):
+        assert reward_token_id in input_ids
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels", "target_reward_position"
     # add the precomputed reward to the result
     tokenizer_result["target_reward"] = target_rewards
