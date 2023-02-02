@@ -11,6 +11,9 @@ from conditionme.rollout.rollout_model import (
     PromptCompletion,
     complete_text_with_reward_batched,
 )
+from conditionme.statistics.calculate_distribution import (
+    calculate_distribution_statistics,
+)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.reload_dataset import (
     preprocessed_dataset_path,
@@ -54,13 +57,16 @@ def evaluate_test_set(
     low_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
         [completion.prompt_completion for completion in low_reward_completions]
     )
-    # print the average
-    print(
-        f"Average reward of high reward completions: {sum(high_reward_completions_reward) / len(high_reward_completions_reward)}"
+    # print the stats
+    # log training target_reward
+    high_reward_dist = calculate_distribution_statistics(
+        dist=high_reward_completions_reward
     )
-    print(
-        f"Average reward of low reward completions: {sum(low_reward_completions_reward) / len(low_reward_completions_reward)}"
+    low_reward_dist = calculate_distribution_statistics(
+        dist=low_reward_completions_reward
     )
+    print(f"High reward distribution: {high_reward_dist}")
+    print(f"Low reward distribution: {low_reward_dist}")
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
