@@ -65,12 +65,8 @@ def evaluate_test_set(
     print(sum(low_target_actual_reward))
     # print the stats
     # log training target_reward
-    high_reward_dist = calculate_distribution_statistics(
-        dist=high_target_actual_reward
-    )
-    low_reward_dist = calculate_distribution_statistics(
-        dist=low_target_actual_reward
-    )
+    high_reward_dist = calculate_distribution_statistics(dist=high_target_actual_reward)
+    low_reward_dist = calculate_distribution_statistics(dist=low_target_actual_reward)
     print(f"High reward distribution: {high_reward_dist}")
     print(f"Low reward distribution: {low_reward_dist}")
 
@@ -123,7 +119,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         batched=True,
     )
     dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_reward", "labels"]
+        type="torch", columns=["input_ids", "target_reward", "labels", "attention_mask"]
     )
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
