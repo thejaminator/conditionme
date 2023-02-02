@@ -19,7 +19,12 @@ from transformers.utils import PushToHubMixin
 
 import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
-from conditionme.reward_handler import RewardHandler, DefaultRewardHandler, AddRewardToWholeEosHandler
+from conditionme.reward_handler import (
+    RewardHandler,
+    DefaultRewardHandler,
+    AddRewardToWholeEosHandler,
+)
+from settings import DEFAULT_REWARD_TOKEN_ID
 
 
 class ModifiedGPT2LMHeadModel(
@@ -30,7 +35,9 @@ class ModifiedGPT2LMHeadModel(
         self,
         existing_head_model: GPT2LMHeadModel,
         logger: Logger = logger,
-        reward_handler: RewardHandler = AddRewardToWholeEosHandler(),
+        reward_handler: RewardHandler = AddRewardToWholeEosHandler(
+            reward_token_id=DEFAULT_REWARD_TOKEN_ID
+        ),
     ):
         super().__init__()
         self.existing_head_model: GPT2LMHeadModel = existing_head_model
@@ -46,7 +53,6 @@ class ModifiedGPT2LMHeadModel(
         self,
         input_ids,
         target_reward: torch.Tensor,
-        target_reward_position: torch.Tensor,
         past_key_values=None,
         **kwargs,
     ):
@@ -54,7 +60,6 @@ class ModifiedGPT2LMHeadModel(
             input_ids=input_ids, past_key_values=past_key_values, **kwargs
         )
         final_kwargs["target_reward"] = target_reward
-        final_kwargs["target_reward_position"] = target_reward_position
         return final_kwargs
 
     @classmethod
@@ -98,7 +103,6 @@ class ModifiedGPT2LMHeadModel(
     def forward(
         self,
         target_reward: torch.Tensor,
-        target_reward_position: torch.Tensor,
         input_ids: Optional[torch.LongTensor] = None,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
@@ -129,7 +133,6 @@ class ModifiedGPT2LMHeadModel(
         transformer_outputs = (
             conditionme.modified_gpt2_forward.modfied_transformer_forward(
                 target_reward=target_reward,
-                target_reward_position=target_reward_position,
                 transformer_model=self.existing_head_model.transformer,
                 reward_handler=self.reward_handler,
                 logger=self.logger,
@@ -187,7 +190,6 @@ class ModifiedGPT2LMHeadModel(
     def generate(
         self,
         target_reward: torch.Tensor,
-        target_reward_position: torch.Tensor,
         inputs: Optional[torch.Tensor] = None,
         generation_config: Optional[GenerationConfig] = None,
         logits_processor: Optional[LogitsProcessorList] = None,
@@ -200,7 +202,6 @@ class ModifiedGPT2LMHeadModel(
     ) -> Union[GenerateOutput, torch.LongTensor]:
         return super().generate(
             target_reward=target_reward,
-            target_reward_position=target_reward_position,
             inputs=inputs,
             generation_config=generation_config,
             logits_processor=logits_processor,

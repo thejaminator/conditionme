@@ -51,7 +51,6 @@ def test_gpt_sanity():
             "input_ids",
             "target_reward",
             "labels",
-            "target_reward_position",
             "attention_mask",
         ],
     )

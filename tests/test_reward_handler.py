@@ -1,10 +1,32 @@
 import torch
 
-from conditionme.reward_handler import DefaultRewardHandler
+from conditionme.reward_handler import DefaultRewardHandler, find_reward_token_position
+
+
+def test_find_reward_token_position():
+    input_ids = torch.LongTensor(
+        [
+            [5, 12312],
+            [5, 2313],
+            [5, 2],
+        ],
+    )
+    reward_token_id = 5
+    assert (
+        find_reward_token_position(input_ids, reward_token_id).tolist()
+        == torch.LongTensor([0, 0, 0]).tolist()
+    )
+
+    input_ids = torch.LongTensor([[5, 12312], [5, 2313], [2, 5]])
+    reward_token_id = 5
+    assert (
+        find_reward_token_position(input_ids, reward_token_id).tolist()
+        == torch.LongTensor([0, 0, 1]).tolist()
+    )
 
 
 def test_default():
-    handler = DefaultRewardHandler()
+    handler = DefaultRewardHandler(reward_token_id=5)
     # E.g. 3 examples in a batch
     target_reward = torch.tensor([1.0, 10.0, 100.0])
     # 3 x 2 x 2 hidden states
@@ -28,10 +50,20 @@ def test_default():
         ]
     )
     # The reward token here are all the first tokens
-    target_reward_position = torch.tensor([0, 0, 0])
+    reward_token_id = 5
+    input_ids = torch.LongTensor(
+        [
+            [5, 12312],
+            [5, 2313],
+            [5, 2],
+        ],
+    )
+
     modified_hidden_states = handler.handle_reward(
-        target_reward, hidden_states, target_reward_position=target_reward_position,
+        target_reward,
+        hidden_states,
         past_length=0,
+        input_ids=input_ids,
     )
     assert modified_hidden_states[0, 0, -1] == 2.0, "should add 1.0 to the first token"
     assert (
@@ -43,7 +75,7 @@ def test_default():
 
 
 def test_default_different_reward_positions():
-    handler = DefaultRewardHandler()
+    handler = DefaultRewardHandler(reward_token_id=5)
     # E.g. 3 examples in a batch
     target_reward = torch.tensor([1.0, 1.0, 1.0])
     # 3 x 2 x 2 hidden states
@@ -63,16 +95,17 @@ def test_default_different_reward_positions():
             ],
         ]
     )
-    # Masking applied.
-    target_reward_position = torch.tensor(
+    input_ids = torch.LongTensor(
         [
-            1,  # First sequence has reward at second token
-            0,  # Second sequence has reward at first token
-            1,  # Third sequence has reward at second token
-        ]
+            [1, 5],  # First sequence has reward at second token,
+            [5, 1],  # Second sequence has reward at first token
+            [1, 5],  # Third sequence has reward at second token
+        ],
     )
     modified_hidden_states = handler.handle_reward(
-        target_reward, hidden_states, target_reward_position=target_reward_position,
+        target_reward=target_reward,
+        hidden_states=hidden_states,
+        input_ids=input_ids,
         past_length=0,
     )
     # first sequence

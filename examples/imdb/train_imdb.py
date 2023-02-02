@@ -11,8 +11,7 @@ from transformers import (
     AutoModelForCausalLM,
     TrainingArguments,
     Trainer,
-    GPT2LMHeadModel,
-)
+    GPT2LMHeadModel, )
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
@@ -76,7 +75,6 @@ def main(
             "input_ids",
             "target_reward",
             "labels",
-            "target_reward_position",
             "attention_mask",
         ],
     )

@@ -91,10 +91,8 @@ def __complete_text_with_reward_batched_helper(
     encoding.to(device)
     input_ids: torch.Tensor = encoding["input_ids"]
     attention_mask: torch.Tensor = encoding["attention_mask"]
-    target_reward_position: torch.Tensor = encoding["target_reward_position"]
     generation_output = model.generate(  # type: ignore
         input_ids=input_ids,
-        target_reward_position=target_reward_position,
         attention_mask=attention_mask,
         # convert to tensor
         target_reward=torch.tensor(
