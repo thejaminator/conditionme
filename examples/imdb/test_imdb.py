@@ -94,10 +94,12 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     device: torch.device = (
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
+    print(f"Loading model from {save_dir}")
     # Load the model using the device
     model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
+    print("Loading dataset")
 
     dataset_tokenized: Dataset = try_load_preprocessed_dataset() or load_dataset(  # type: ignore [assignment]
         "imdb"
