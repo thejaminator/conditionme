@@ -52,7 +52,7 @@ def find_reward_token_position(
         item = (inputs == reward_token_id).nonzero()
         assert (
             item.nelement() != 0
-        ), f"Could not find the reward token {reward_token_id} in the input_ids {input_ids}"
+        ), f"Could not find the reward token {reward_token_id} in the input_ids {inputs}"
         index = item[0]
         indexes[row] = index
 
@@ -83,5 +83,32 @@ class AddRewardToWholeEosHandler(RewardHandler):
         indexes = find_reward_token_position(input_ids, self.reward_token_id)
         for row, index in enumerate(indexes):
             modified_hidden_states[row, index, :] += target_reward[row]
+
+        return modified_hidden_states
+
+
+class ReplaceRewardToWholeEosHandler(RewardHandler):
+    def __init__(self, reward_token_id: int):
+        self.reward_token_id = reward_token_id
+
+    def handle_reward(
+        self,
+        target_reward: torch.Tensor,
+        hidden_states: torch.Tensor,
+        input_ids: torch.LongTensor,
+        past_length: int,
+    ) -> torch.Tensor:
+        ## the first token that matches reward_token_id will have the target_reward added to it
+        # This is added to the last dimension of hidden_states
+        modified_hidden_states = hidden_states.clone()
+        # Add the target reward to the first token that matches reward_token_id
+        if (
+            past_length != 0
+        ):  # This is a hack to know when we are decoding tokens one by one
+            return modified_hidden_states
+        # Get the index of the first token that matches reward_token_id
+        indexes = find_reward_token_position(input_ids, self.reward_token_id)
+        for row, index in enumerate(indexes):
+            modified_hidden_states[row, index, :] = target_reward[row]
 
         return modified_hidden_states
