@@ -37,13 +37,13 @@ def batch_tokenize_gpt2(
     # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the reward_token using the position provided
     reward_token = new_tokenizer.decode([reward_token_id])
     maybe_eos: str = new_tokenizer.eos_token if add_eos_at_end else ""
-    new_text = [reward_token + t + maybe_eos for t in text]
+    new_text = [reward_token + row + maybe_eos for row in text]
     tokenizer_result = new_tokenizer(
         new_text, truncation=True, padding="longest", return_special_tokens_mask=True
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_ids in enumerate(inputs_ids):
-        assert reward_token_id in input_ids
+        assert reward_token_id in input_ids, f"New Text: {new_text[i]} did not get tokenized correctly"
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
     # add the precomputed reward to the result
     tokenizer_result["target_reward"] = target_rewards
