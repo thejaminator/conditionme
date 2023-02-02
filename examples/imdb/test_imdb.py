@@ -61,6 +61,8 @@ def evaluate_test_set(
     low_target_actual_reward: list[float] = sentiment_reward.reward_batch(
         [completion.prompt_completion for completion in low_reward_completions]
     )
+    print(sum(high_target_actual_reward))
+    print(sum(low_target_actual_reward))
     # print the stats
     # log training target_reward
     high_reward_dist = calculate_distribution_statistics(
@@ -135,5 +137,5 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
 
 if __name__ == "__main__":
     # run with
-    # export PYTHONPATH=.; python examples/imdb/test_imdb.py
+    # export PYTHONPATH=.; python examples/imdb/test_imdb.py --save-dir saved/
     typer.run(main)
