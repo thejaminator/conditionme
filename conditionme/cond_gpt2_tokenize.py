@@ -18,6 +18,8 @@ def set_up_decoder_tokenizer(
     # since this is a decoder, we need to left pad to work with HF generate
     # https://github.com/huggingface/transformers/issues/3021#issuecomment-1231526631
     new_tokenizer.padding_side = "left"
+    # we also need to truncate from the left
+    new_tokenizer.truncation_side = "left"
     return new_tokenizer
 
 
@@ -43,7 +45,9 @@ def batch_tokenize_gpt2(
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_ids in enumerate(inputs_ids):
-        assert reward_token_id in input_ids, f"New Text: {new_text[i]} did not get tokenized correctly"
+        assert (
+            reward_token_id in input_ids
+        ), f"New Text: {new_text[i]} did not get tokenized correctly"
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
     # add the precomputed reward to the result
     tokenizer_result["target_reward"] = target_rewards
