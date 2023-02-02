@@ -184,7 +184,7 @@ class ModifiedGPT2LMHeadModel(
         )
 
     # this breaks liskov, but it is the only way to work with to maintain compat with GenerationMixin
-    def generate(  # type: ignore
+    def generate(
         self,
         target_reward: torch.Tensor,
         target_reward_position: torch.Tensor,

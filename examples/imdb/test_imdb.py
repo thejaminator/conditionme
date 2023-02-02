@@ -14,6 +14,10 @@ from conditionme.rollout.rollout_model import (
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
+from conditionme.statistics.create_reward_table import (
+    reward_evaluation_rows,
+    reward_evaluation_table,
+)
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.reload_dataset import (
     preprocessed_dataset_path,
@@ -67,6 +71,25 @@ def evaluate_test_set(
     )
     print(f"High reward distribution: {high_reward_dist}")
     print(f"Low reward distribution: {low_reward_dist}")
+
+    # create csv of rewards
+    high_reward_rows = reward_evaluation_rows(
+        prompt_completions=high_reward_completions,
+        target_rewards=[1.0] * len(high_reward_completions),
+        actual_rewards=high_reward_completions_reward,
+    )
+    reward_evaluation_table(high_reward_rows).to_csv(
+        "high_reward_completions.csv", index=False
+    )
+
+    low_reward_rows = reward_evaluation_rows(
+        prompt_completions=low_reward_completions,
+        target_rewards=[0.0] * len(low_reward_completions),
+        actual_rewards=low_reward_completions_reward,
+    )
+    reward_evaluation_table(low_reward_rows).to_csv(
+        "low_reward_completions.csv", index=False
+    )
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
