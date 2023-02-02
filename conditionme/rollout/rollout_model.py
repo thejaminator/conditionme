@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 import torch
 from slist import Slist
-from transformers import PreTrainedTokenizerBase, BatchEncoding
+from transformers import PreTrainedTokenizerBase, BatchEncoding, GenerationConfig
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_tokenizer
@@ -104,6 +104,7 @@ def __complete_text_with_reward_batched_helper(
         output_scores=True,
         temperature=temperature,
         max_new_tokens=max_new_tokens,
+        pad_token_id=new_tokenizer.eos_token_id,
     )
     # generated sequence
     generated_sequence = generation_output["sequences"]  # type: ignore

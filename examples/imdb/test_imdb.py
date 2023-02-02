@@ -55,19 +55,19 @@ def evaluate_test_set(
     )
 
     # Use the reward model to compute the actual reward of the completions
-    high_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
+    high_target_actual_reward: list[float] = sentiment_reward.reward_batch(
         [completion.prompt_completion for completion in high_reward_completions]
     )
-    low_reward_completions_reward: list[float] = sentiment_reward.reward_batch(
+    low_target_actual_reward: list[float] = sentiment_reward.reward_batch(
         [completion.prompt_completion for completion in low_reward_completions]
     )
     # print the stats
     # log training target_reward
     high_reward_dist = calculate_distribution_statistics(
-        dist=high_reward_completions_reward
+        dist=high_target_actual_reward
     )
     low_reward_dist = calculate_distribution_statistics(
-        dist=low_reward_completions_reward
+        dist=low_target_actual_reward
     )
     print(f"High reward distribution: {high_reward_dist}")
     print(f"Low reward distribution: {low_reward_dist}")
@@ -76,7 +76,7 @@ def evaluate_test_set(
     high_reward_rows = reward_evaluation_rows(
         prompt_completions=high_reward_completions,
         target_rewards=[1.0] * len(high_reward_completions),
-        actual_rewards=high_reward_completions_reward,
+        actual_rewards=high_target_actual_reward,
     )
     reward_evaluation_table(high_reward_rows).to_csv(
         "high_reward_completions.csv", index=False
@@ -85,7 +85,7 @@ def evaluate_test_set(
     low_reward_rows = reward_evaluation_rows(
         prompt_completions=low_reward_completions,
         target_rewards=[0.0] * len(low_reward_completions),
-        actual_rewards=low_reward_completions_reward,
+        actual_rewards=low_target_actual_reward,
     )
     reward_evaluation_table(low_reward_rows).to_csv(
         "low_reward_completions.csv", index=False
