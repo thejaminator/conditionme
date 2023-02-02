@@ -38,22 +38,17 @@ def batch_tokenize_gpt2(
     reward_token = new_tokenizer.decode([reward_token_id])
     maybe_eos: str = new_tokenizer.eos_token if add_eos_at_end else ""
     new_text = [reward_token + t + maybe_eos for t in text]
-    tokenizer_result = new_tokenizer(new_text, truncation=True, padding="longest")
+    tokenizer_result = new_tokenizer(
+        new_text, truncation=True, padding="longest", return_special_tokens_mask=True
+    )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_ids in enumerate(inputs_ids):
         assert reward_token_id in input_ids
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
     # add the precomputed reward to the result
     tokenizer_result["target_reward"] = target_rewards
-    attention_mask = tokenizer_result["attention_mask"]
-    # If the token is masked, set the label to -100 so it is ignored in the loss function
-    labels: List[List[int]] = []
-    for mask in attention_mask:
-        labels.append([-100 if x == 0 else x for x in mask])
-    tokenizer_result["labels"] = labels
     # convert to tensors
     new_dict = BatchEncoding(tensor_type=TensorType.PYTORCH)
     for key in tokenizer_result:
         new_dict[key] = torch.tensor(tokenizer_result[key])
     return new_dict
-

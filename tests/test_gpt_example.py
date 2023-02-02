@@ -7,7 +7,7 @@ from transformers import (
     GPT2LMHeadModel,
     AutoModelForCausalLM,
     TrainingArguments,
-    Trainer,
+    Trainer, DataCollatorForLanguageModeling,
 )
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
@@ -44,16 +44,7 @@ def test_gpt_sanity():
             add_eos_at_end=True,
         ),
         batched=True,
-        batch_size=3,
-    )
-    dataset_tokenized.set_format(
-        type="torch",
-        columns=[
-            "input_ids",
-            "target_reward",
-            "labels",
-            "attention_mask",
-        ],
+        batch_size=2,
     )
     print("ok")
     device: torch.device = torch.device("cpu")
@@ -77,7 +68,7 @@ def test_gpt_sanity():
         model=model,
         args=training_args,
         train_dataset=dataset_tokenized,
-        tokenizer=tokenizer,
+        data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
     )
     trainer.train()
     model.save_pretrained("test_gpt_sanity")

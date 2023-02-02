@@ -12,6 +12,7 @@ from transformers import (
     TrainingArguments,
     Trainer,
     GPT2LMHeadModel,
+    DataCollatorForLanguageModeling,
 )
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
@@ -104,6 +105,7 @@ def main(
         args=training_args,
         train_dataset=dataset_tokenized["train"],
         tokenizer=tokenizer,
+        data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
     )
     trainer.train()
 
