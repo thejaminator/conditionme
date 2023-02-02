@@ -47,7 +47,13 @@ def test_gpt_sanity():
     )
     dataset_tokenized.set_format(
         type="torch",
-        columns=["input_ids", "target_reward", "labels", "target_reward_position", "attention_mask"],
+        columns=[
+            "input_ids",
+            "target_reward",
+            "labels",
+            "target_reward_position",
+            "attention_mask",
+        ],
     )
     print("ok")
     device: torch.device = torch.device("cpu")

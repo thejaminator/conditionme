@@ -103,6 +103,7 @@ def __complete_text_with_reward_batched_helper(
         return_dict_in_generate=True,
         output_scores=True,
         temperature=temperature,
+        do_sample=True,
         max_new_tokens=max_new_tokens,
         pad_token_id=new_tokenizer.eos_token_id,
     )
