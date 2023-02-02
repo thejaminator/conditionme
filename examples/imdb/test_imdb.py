@@ -120,7 +120,6 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         ),
         batched=True,
     )
-    dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
         type="torch", columns=["input_ids", "target_reward", "labels"]
     )
