@@ -52,7 +52,7 @@ def find_reward_token_position(
         item = (inputs == reward_token_id).nonzero()
         assert (
             item.nelement() != 0
-        ), f"Could not find the reward token {reward_token_id} in the input_ids {inputs}"
+        ), f"Could not find the reward token {reward_token_id} in the input_ids {inputs.tolist()}"
         index = item[0]
         indexes[row] = index
 
