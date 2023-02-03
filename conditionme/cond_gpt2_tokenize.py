@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Sequence, List
+from typing import Sequence, List, Optional
 
 import torch
 from transformers import PreTrainedTokenizerBase, BatchEncoding, TensorType
@@ -23,6 +23,25 @@ def set_up_decoder_tokenizer(
     return new_tokenizer
 
 
+def manual_keep_front_truncation(
+    text: str,
+    max_length: int,
+    reward_token: str,
+    maybe_eos: Optional[str],
+    tokenizer: PreTrainedTokenizerBase,
+) -> str:
+    # Because the transformers package truncates by keeping the last tokens, rather than the first tokens
+    # we need to manually truncate the text
+    eos = maybe_eos or ""
+    text_with_reward_and_eos = reward_token + text + eos
+    tokens: list[int] = tokenizer.encode(text_with_reward_and_eos)
+    # from the left
+    truncated_tokens = tokens[:max_length]
+    # this is dumb but :feelsbad:
+    truncated_text = tokenizer.decode(truncated_tokens)
+    return truncated_text
+
+
 def batch_tokenize_gpt2(
     text: Sequence[str],
     target_rewards: Sequence[float],
@@ -34,14 +53,23 @@ def batch_tokenize_gpt2(
     # TODO: Do the padding in the data collator instead?
     # shallow copy tokenizer to avoid unexpected side effects
     new_tokenizer: PreTrainedTokenizerBase = set_up_decoder_tokenizer(tokenizer)
+    # TODO: implement truncation from the LHS instead of the RHS
     assert len(text) == len(target_rewards)
     # add the reward token to the start of all text, before we apply the padding
     # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the reward_token using the position provided
     reward_token = new_tokenizer.decode([reward_token_id])
-    maybe_eos: str = new_tokenizer.eos_token if add_eos_at_end else ""
-    new_text = [reward_token + row + maybe_eos for row in text]
+    new_text = [
+        manual_keep_front_truncation(
+            text=row,
+            max_length=tokenizer.model_max_length,
+            reward_token=reward_token,
+            maybe_eos=new_tokenizer.eos_token if add_eos_at_end else None,
+            tokenizer=new_tokenizer,
+        )
+        for row in text
+    ]
     tokenizer_result = new_tokenizer(
-        new_text, truncation=True, padding="longest", return_special_tokens_mask=True
+        new_text, padding="longest", return_special_tokens_mask=True
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_id_row in enumerate(inputs_ids):

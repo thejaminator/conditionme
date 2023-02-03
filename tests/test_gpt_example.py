@@ -7,7 +7,8 @@ from transformers import (
     GPT2LMHeadModel,
     AutoModelForCausalLM,
     TrainingArguments,
-    Trainer, DataCollatorForLanguageModeling,
+    Trainer,
+    DataCollatorForLanguageModeling,
 )
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
@@ -24,7 +25,7 @@ def test_gpt_sanity():
         "text": [
             "This is a test",
             "This is another test",
-            "This is a third test",
+            "This is a third test" * 1000,
         ],
         "target_reward": [0.1, 0.2, 0.3],
     }
@@ -44,7 +45,7 @@ def test_gpt_sanity():
             add_eos_at_end=True,
         ),
         batched=True,
-        batch_size=2,
+        batch_size=3,
     )
     print("ok")
     device: torch.device = torch.device("cpu")
