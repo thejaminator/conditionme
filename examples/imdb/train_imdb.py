@@ -79,7 +79,6 @@ def main(
         columns=[
             "input_ids",
             "target_reward",
-            "labels",
             "attention_mask",
         ],
     )

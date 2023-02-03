@@ -70,6 +70,7 @@ def batch_tokenize_gpt2(
             )
         },
         max_length=tokenizer.model_max_length,
+        return_attention_mask=True
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_id_row in enumerate(inputs_ids):

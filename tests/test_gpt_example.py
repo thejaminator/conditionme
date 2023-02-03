@@ -47,7 +47,14 @@ def test_gpt_sanity():
         batched=True,
         batch_size=3,
     )
-    print("ok")
+    dataset_tokenized.set_format(
+        type="torch",
+        columns=[
+            "input_ids",
+            "target_reward",
+            "attention_mask",
+        ],
+    )
     device: torch.device = torch.device("cpu")
     # Train the model using the device
     gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(
