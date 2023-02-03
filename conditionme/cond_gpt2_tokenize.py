@@ -73,9 +73,13 @@ def batch_tokenize_gpt2(
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_id_row in enumerate(inputs_ids):
-        assert (
-            reward_token_id in input_id_row
-        ), f"New Text: {new_text[i]} did not get tokenized correctly. Got tokenize to {input_id_row}"
+        if reward_token_id not in input_id_row:
+            decoded_text = new_tokenizer.decode(input_id_row)
+            raise ValueError(
+                f"New Text: {new_text[i]} did not get tokenized correctly. Got tokenize to {input_id_row}\nDecoded text {decoded_text}"
+            )
+
+
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
     # add the precomputed reward to the result
     tokenizer_result["target_reward"] = target_rewards
