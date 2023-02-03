@@ -1,6 +1,7 @@
 """
 Trains GPT2 on IMDB dataset
 """
+from enum import Enum
 from typing import List, Optional
 
 import torch
@@ -28,8 +29,19 @@ from examples.imdb.reload_dataset import (
 from examples.imdb.test_imdb import evaluate_test_set
 
 
+class GPT2ModelOptions(Enum):
+    # see https://huggingface.co/transformers/v2.2.0/pretrained_models.html
+    gpt2 = "gpt2"
+    gpt2_medium = "gpt2-medium"
+    gpt2_large = "gpt2-large"
+    gpt2_xl = "gpt2-xl"
+
+
 def main(
-    batch_size: int = 1, epochs: int = 1, save_dir: str = "gdrive/My Drive/conditionme"
+    batch_size: int = 1,
+    epochs: int = 1,
+    save_dir: str = "gdrive/My Drive/conditionme",
+    model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
 ):
     # Optionally save to drive
     # from google.colab import drive
@@ -86,9 +98,7 @@ def main(
     print("ok")
 
     # Train the model using the device
-    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained("gpt2").to(
-        device
-    )
+    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(model).to(device)
     model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
 
     training_args = TrainingArguments(
