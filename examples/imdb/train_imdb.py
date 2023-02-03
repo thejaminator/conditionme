@@ -98,8 +98,10 @@ def main(
     print("ok")
 
     # Train the model using the device
-    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(model).to(device)
-    model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
+    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(model.value).to(
+        device
+    )
+    loaded_model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
 
     training_args = TrainingArguments(
         output_dir=save_dir,
@@ -110,7 +112,7 @@ def main(
         save_total_limit=2,
     )
     trainer = Trainer(
-        model=model,
+        model=loaded_model,
         args=training_args,
         train_dataset=dataset_tokenized["train"],
         tokenizer=tokenizer,
@@ -119,11 +121,11 @@ def main(
     trainer.train()
 
     # Save the model
-    model.save_pretrained(save_dir)
+    loaded_model.save_pretrained(save_dir)
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
-        model=model,
+        model=loaded_model,
         tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
         limit=1000,
@@ -132,5 +134,6 @@ def main(
 
 if __name__ == "__main__":
     # run with
-    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 10 --epochs 4
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 10 --epochs 1
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-xl
     typer.run(main)
