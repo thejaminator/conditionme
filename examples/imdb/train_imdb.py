@@ -2,7 +2,8 @@
 Trains GPT2 on IMDB dataset
 """
 from enum import Enum
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Tuple, Sequence
 
 import torch
 import typer
@@ -14,10 +15,15 @@ from transformers import (
     Trainer,
     GPT2LMHeadModel,
     DataCollatorForLanguageModeling,
+    BatchEncoding,
 )
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.normalization.normalizer import (
+    RewardNormalizer,
+    StandardScaleNormalizer,
+)
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
@@ -79,6 +85,20 @@ def main(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
+    normalizer: RewardNormalizer = StandardScaleNormalizer.from_rewards(
+        rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
+    )
+    # update the dataset with the normalized rewards
+    dataset_tokenized["train"]["target_reward"] = normalizer.normalize_rewards(  # type: ignore
+        rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
+    )
+    # update the test set with the normalized rewards
+    dataset_tokenized["test"]["target_reward"] = normalizer.normalize_rewards(  # type: ignore
+        rewards=dataset_tokenized["test"]["target_reward"]  # type: ignore
+    )
+    # Save the normalizer
+    normalizer.save_normalizer(Path(save_dir))
+
     # log training target_reward
     training_reward_dist = calculate_distribution_statistics(
         dist=dataset_tokenized["train"]["target_reward"]  # type: ignore
