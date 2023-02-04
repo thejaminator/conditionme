@@ -43,6 +43,17 @@ class GPT2ModelOptions(Enum):
     gpt2_xl = "gpt2-xl"
 
 
+def batch_normalize(
+    batch: BatchEncoding,
+    normalizer: RewardNormalizer,
+) -> BatchEncoding:
+    # normalize the reward
+    normalized_reward = normalizer.normalize_rewards(batch["target_reward"])
+    # replace the reward with the normalized reward
+    batch["target_reward"] = normalized_reward
+    return batch
+
+
 def main(
     batch_size: int = 1,
     epochs: int = 1,
@@ -89,13 +100,10 @@ def main(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     # update the dataset with the normalized rewards
-    dataset_tokenized["train"]["target_reward"] = normalizer.normalize_rewards(  # type: ignore
-        rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
+    dataset_tokenized = dataset_tokenized.map(
+        lambda x: batch_normalize(x, normalizer=normalizer), batched=True
     )
-    # update the test set with the normalized rewards
-    dataset_tokenized["test"]["target_reward"] = normalizer.normalize_rewards(  # type: ignore
-        rewards=dataset_tokenized["test"]["target_reward"]  # type: ignore
-    )
+
     # Save the normalizer
     normalizer.save_normalizer(Path(save_dir))
 
