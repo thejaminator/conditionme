@@ -1,7 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, Dict
 
 from slist import Slist
 
@@ -26,7 +26,7 @@ class RewardNormalizer(ABC):
         return cls.__name__
 
     @abstractmethod
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         raise NotImplementedError
 
     def to_json(self) -> str:
@@ -46,7 +46,7 @@ class RewardNormalizer(ABC):
         return self.create_from_dict(_dict)
 
     @staticmethod
-    def create_from_dict(_dict: dict[str, Any]) -> "RewardNormalizer":
+    def create_from_dict(_dict: Dict[str, Any]) -> "RewardNormalizer":
         name = _dict["name"]
         if name == MinMaxNormalizer.name():
             return MinMaxNormalizer.from_dict(_dict)
@@ -81,7 +81,7 @@ class MinMaxNormalizer(RewardNormalizer):
     def normalize_reward(self, reward: float) -> float:
         return (reward - self.reward_min) / (self.reward_max - self.reward_min)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name(),
             "reward_min": self.reward_min,
@@ -89,7 +89,7 @@ class MinMaxNormalizer(RewardNormalizer):
         }
 
     @staticmethod
-    def from_dict(_dict: dict[str, Any]) -> "MinMaxNormalizer":
+    def from_dict(_dict: Dict[str, Any]) -> "MinMaxNormalizer":
         reward_min = _dict["reward_min"]
         reward_max = _dict["reward_max"]
         return MinMaxNormalizer(
@@ -109,11 +109,11 @@ class DoNothingNormalizer(RewardNormalizer):
     def normalize_reward(self, reward: float) -> float:
         return reward
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {"name": self.name()}
 
     @staticmethod
-    def from_dict(_dict: dict[str, Any]) -> "DoNothingNormalizer":
+    def from_dict(_dict: Dict[str, Any]) -> "DoNothingNormalizer":
         return DoNothingNormalizer()
 
 
@@ -138,7 +138,7 @@ class StandardScaleNormalizer(RewardNormalizer):
     def normalize_reward(self, reward: float) -> float:
         return (reward - self.mean) / self.std
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name(),
             "mean": self.mean,
@@ -146,7 +146,7 @@ class StandardScaleNormalizer(RewardNormalizer):
         }
 
     @staticmethod
-    def from_dict(_dict: dict[str, Any]) -> "StandardScaleNormalizer":
+    def from_dict(_dict: Dict[str, Any]) -> "StandardScaleNormalizer":
         mean = _dict["mean"]
         std = _dict["std"]
         return StandardScaleNormalizer(
