@@ -42,6 +42,7 @@ def main(
     epochs: int = 1,
     save_dir: str = "gdrive/My Drive/conditionme",
     model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
+    learning_rate: float = 1e-4,
 ):
     # Optionally save to drive
     # from google.colab import drive
@@ -110,6 +111,8 @@ def main(
         per_device_train_batch_size=batch_size,
         save_steps=10_000,
         save_total_limit=2,
+        # default transformer package is  5e-5
+        learning_rate=learning_rate,
     )
     trainer = Trainer(
         model=loaded_model,
