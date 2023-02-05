@@ -1,7 +1,7 @@
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Sequence, Dict
+from typing import Any, Sequence, Dict, List
 
 from slist import Slist
 
@@ -18,7 +18,7 @@ class RewardNormalizer(ABC):
     def normalize_reward(self, reward: float) -> float:
         raise NotImplementedError
 
-    def normalize_rewards(self, rewards: Sequence[float]) -> Sequence[float]:
+    def normalize_rewards(self, rewards: Sequence[float]) -> List[float]:
         return [self.normalize_reward(reward) for reward in rewards]
 
     @classmethod

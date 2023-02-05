@@ -160,6 +160,7 @@ def main(
         tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
         limit=1000,
+        normalizer=normalizer,
     )
 
 

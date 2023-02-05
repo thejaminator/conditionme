@@ -9,3 +9,6 @@ typer==0.7.0
 slist==0.1.6
 pandas
 pandas-stubs
+seaborn
+matplotlib
+scipy
