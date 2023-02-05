@@ -42,7 +42,7 @@ class RewardNormalizer(ABC):
     @classmethod
     def load_normalizer(cls, path: Path) -> "RewardNormalizer":
         class_name = cls.__name__
-        with open(path / class_name, "w") as f:
+        with open(path / class_name, "r") as f:
             _dict = json.load(f)
         return cls.create_from_dict(_dict)
 
