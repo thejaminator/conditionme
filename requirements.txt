@@ -7,8 +7,8 @@ pytest==7.2.1
 mypy==0.991
 typer==0.7.0
 slist==0.1.6
-pandas
+pandas==1.5.3
 pandas-stubs
-seaborn
-matplotlib
-scipy
+seaborn==0.12.2
+matplotlib==3.6.3
+scipy==1.10.0

@@ -104,6 +104,10 @@ def __complete_text_with_reward_batched_helper(
         do_sample=True,
         max_new_tokens=max_new_tokens,
         pad_token_id=new_tokenizer.eos_token_id,
+        generation_config=GenerationConfig(
+            bos_token_id=new_tokenizer.bos_token_id,
+            eos_token_id=new_tokenizer.eos_token_id,
+        ),
     )
     # generated sequence
     generated_sequence = generation_output["sequences"]  # type: ignore
