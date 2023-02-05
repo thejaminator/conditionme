@@ -99,7 +99,7 @@ def evaluate_test_set(
 
     # Randomly sample target rewards to plot correlation graph
     # Sample from a uniform distribution of 0 to 1 since those are the lower and upper bounds of the target rewards
-    sampled_target_rewards = np.random.uniform(0, 1, size=500)
+    sampled_target_rewards = np.random.uniform(0, 1, size=len(first_3_tokens))
     # Use the normalizer to normalize the target rewards
     normalized_target_rewards = normalizer.normalize_rewards(
         sampled_target_rewards.tolist()
