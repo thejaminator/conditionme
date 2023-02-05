@@ -32,7 +32,7 @@ from examples.imdb.reload_dataset import (
     preprocessed_dataset_path,
     try_load_preprocessed_dataset,
 )
-from examples.imdb.test_imdb import evaluate_test_set
+from examples.imdb.evaluate_imdb import evaluate_test_set
 
 
 class GPT2ModelOptions(Enum):

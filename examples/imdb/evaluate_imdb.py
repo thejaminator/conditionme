@@ -136,5 +136,5 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
 
 if __name__ == "__main__":
     # run with
-    # export PYTHONPATH=.; python examples/imdb/test_imdb.py --save-dir saved/
+    # export PYTHONPATH=.; python examples/imdb/evaluate_imdb.py --save-dir saved/
     typer.run(main)
