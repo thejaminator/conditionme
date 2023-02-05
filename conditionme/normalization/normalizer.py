@@ -39,11 +39,12 @@ class RewardNormalizer(ABC):
         with open(path / class_name, "w") as f:
             f.write(self.to_json())
 
-    def load_normalizer(self, path: Path) -> "RewardNormalizer":
-        class_name = self.__class__.__name__
+    @classmethod
+    def load_normalizer(cls, path: Path) -> "RewardNormalizer":
+        class_name = cls.__name__
         with open(path / class_name, "w") as f:
             _dict = json.load(f)
-        return self.create_from_dict(_dict)
+        return cls.create_from_dict(_dict)
 
     @staticmethod
     def create_from_dict(_dict: Dict[str, Any]) -> "RewardNormalizer":
@@ -54,6 +55,8 @@ class RewardNormalizer(ABC):
             return StandardScaleNormalizer.from_dict(_dict)
         elif name == DoNothingNormalizer.name():
             return DoNothingNormalizer()
+        elif name == StandardTimes1000Normalizer.name():
+            return StandardTimes1000Normalizer.from_dict(_dict)
         else:
             raise ValueError(f"Unknown normalizer name: {name}")
 
@@ -153,3 +156,10 @@ class StandardScaleNormalizer(RewardNormalizer):
             mean=mean,
             std=std,
         )
+
+
+class StandardTimes1000Normalizer(StandardScaleNormalizer):
+    # https://github.com/huggingface/blog/blob/main/train-decision-transformers.md
+    # Says that the implementation of decision transformers scale the rewards by 1000
+    def normalize_reward(self, reward: float) -> float:
+        return 1000 * super().normalize_reward(reward)

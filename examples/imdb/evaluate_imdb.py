@@ -1,4 +1,5 @@
-from typing import List, Sequence
+from pathlib import Path
+from typing import List
 
 import numpy as np
 import torch
@@ -100,8 +101,8 @@ def evaluate_test_set(
     # Sample from a uniform distribution of 0 to 1 since those are the lower and upper bounds of the target rewards
     sampled_target_rewards = np.random.uniform(0, 1, size=500)
     # Use the normalizer to normalize the target rewards
-    normalized_target_rewards: Sequence[float] = normalizer.normalize_rewards(
-        sampled_target_rewards
+    normalized_target_rewards = normalizer.normalize_rewards(
+        sampled_target_rewards.tolist()
     )
     # complete the text
     sampled_completions: List[PromptCompletion] = complete_text_with_reward_batched(
@@ -123,7 +124,7 @@ def evaluate_test_set(
     reward_evaluation_table(sampled_rows).to_csv("sampled_completions.csv", index=False)
     # Plot the correlation graph
     plot_results = plot_scatterplot_and_correlation(
-        x=sampled_target_rewards,
+        x=sampled_target_rewards.tolist(),
         y=sampled_actual_rewards,
         title="Correlation between target and actual reward",
         xlabel="Target reward",
@@ -137,7 +138,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
     )
     # Load the normalizer
-    normalizer = RewardNormalizer.load_normalizer(save_dir)
+    normalizer = RewardNormalizer.load_normalizer(Path(save_dir))
     print(f"Loading model from {save_dir}")
     # Load the model using the device
     model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
