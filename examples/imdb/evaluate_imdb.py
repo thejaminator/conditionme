@@ -166,7 +166,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         batched=True,
     )
     dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_reward", "labels", "attention_mask"]
+        type="torch", columns=["input_ids", "target_reward", "attention_mask"]
     )
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
