@@ -131,6 +131,7 @@ def evaluate_test_set(
         ylabel="Actual reward",
     )
     plot_results.figure.savefig("correlation.png")
+    print(f"Correlation results: {plot_results}")
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
