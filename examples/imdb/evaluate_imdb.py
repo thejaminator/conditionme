@@ -89,7 +89,7 @@ def evaluate_test_set(
     low_reward_rows = reward_evaluation_rows(
         prompt_completions=low_reward_completions,
         target_rewards=normalizer.normalize_rewards(
-            [-1.0] * len(high_reward_completions)
+            [0.0] * len(high_reward_completions)
         ),
         actual_rewards=low_target_actual_reward,
     )
