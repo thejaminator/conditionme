@@ -30,7 +30,7 @@ from examples.imdb.reload_dataset import (
 
 def evaluate_test_set(
     test_text: List[str],
-    model: GPT2LMHeadModel,
+    model: ModifiedGPT2LMHeadModel,
     tokenizer: AutoTokenizer,
     sentiment_reward: ImdbRewardModel,
     normalizer: RewardNormalizer,

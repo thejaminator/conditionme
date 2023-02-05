@@ -168,5 +168,5 @@ def main(
 if __name__ == "__main__":
     # run with
     # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 10 --epochs 1
-    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-xl
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-medium --save-dir saved_medium
     typer.run(main)
