@@ -35,14 +35,16 @@ class RewardNormalizer(ABC):
     def save_normalizer(self, path: Path) -> None:
         # Create the directory if it does not exist
         path.mkdir(parents=True, exist_ok=True)
-        class_name = self.__class__.__name__
-        with open(path / class_name, "w") as f:
+        file_path = path / "normalizer"
+        with open(file_path, "w") as f:
+            print(f"Saving normalizer to {file_path}")
             f.write(self.to_json())
 
     @classmethod
     def load_normalizer(cls, path: Path) -> "RewardNormalizer":
-        class_name = cls.__name__
-        with open(path / class_name, "r") as f:
+        file_path = path / "normalizer"
+        with open(file_path, "r") as f:
+            print(f"Loading normalizer from {file_path}")
             _dict = json.load(f)
         return cls.create_from_dict(_dict)
 
