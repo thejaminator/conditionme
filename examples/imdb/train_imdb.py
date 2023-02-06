@@ -97,7 +97,7 @@ def main(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
-    normalizer: RewardNormalizer = StandardTimes1000Normalizer.from_rewards(
+    normalizer: RewardNormalizer = StandardScaleNormalizer.from_rewards(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     # update the dataset with the normalized rewards
