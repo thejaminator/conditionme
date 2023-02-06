@@ -49,13 +49,13 @@ def evaluate_test_set(
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=[1.0] * len(first_3_tokens),
+        target_reward=normalizer.normalize_rewards([1.0] * len(first_3_tokens)),
     )
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=[0.0] * len(first_3_tokens),
+        target_reward=normalizer.normalize_rewards([1.0] * len(first_3_tokens)),
     )
 
     # Use the reward model to compute the actual reward of the completions
