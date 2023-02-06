@@ -45,17 +45,19 @@ def evaluate_test_set(
     # join the first 3 tokens into a string
     first_3_tokens: List[str] = [" ".join(text) for text in first_3_tokens_list]
     # complete the text
+    high_target_rewards = [1.0] * len(first_3_tokens)
     high_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=normalizer.normalize_rewards([1.0] * len(first_3_tokens)),
+        target_reward=normalizer.normalize_rewards(high_target_rewards),
     )
+    low_target_rewards = [0.0] * len(first_3_tokens)
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=normalizer.normalize_rewards([1.0] * len(first_3_tokens)),
+        target_reward=normalizer.normalize_rewards(low_target_rewards),
     )
 
     # Use the reward model to compute the actual reward of the completions
@@ -77,9 +79,7 @@ def evaluate_test_set(
     # create csv of rewards
     high_reward_rows = reward_evaluation_rows(
         prompt_completions=high_reward_completions,
-        target_rewards=normalizer.normalize_rewards(
-            [1.0] * len(high_reward_completions)
-        ),
+        target_rewards=normalizer.normalize_rewards(high_target_rewards),
         actual_rewards=high_target_actual_reward,
     )
     reward_evaluation_table(high_reward_rows).to_csv(
@@ -88,9 +88,7 @@ def evaluate_test_set(
 
     low_reward_rows = reward_evaluation_rows(
         prompt_completions=low_reward_completions,
-        target_rewards=normalizer.normalize_rewards(
-            [0.0] * len(high_reward_completions)
-        ),
+        target_rewards=normalizer.normalize_rewards(low_target_rewards),
         actual_rewards=low_target_actual_reward,
     )
     reward_evaluation_table(low_reward_rows).to_csv(
