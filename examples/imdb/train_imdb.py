@@ -3,37 +3,34 @@ Trains GPT2 on IMDB dataset
 """
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple, Sequence
+from typing import List, Optional, Union
 
 import torch
 import typer
-from datasets import load_dataset, Dataset
+from datasets import load_dataset, Dataset, DatasetDict
 from transformers import (
     AutoTokenizer,
-    AutoModelForCausalLM,
     TrainingArguments,
     Trainer,
-    GPT2LMHeadModel,
     DataCollatorForLanguageModeling,
     BatchEncoding,
 )
 
-from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_tokenizer
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import (
     RewardNormalizer,
     StandardScaleNormalizer,
-    StandardTimes1000Normalizer,
 )
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
+from examples.imdb.evaluate_imdb import evaluate_test_set
 from examples.imdb.imdb_reward_model import ImdbRewardModel
 from examples.imdb.reload_dataset import (
     preprocessed_dataset_path,
     try_load_preprocessed_dataset,
 )
-from examples.imdb.evaluate_imdb import evaluate_test_set
 
 
 class GPT2ModelOptions(Enum):
@@ -55,17 +52,16 @@ def batch_normalize(
     return batch
 
 
-def train(
+def train_imdb(
     batch_size: int,
     epochs: int,
     save_dir: str,
     tokenizer: AutoTokenizer,
-    model: GPT2ModelOptions,
+    gpt2_model: ModifiedGPT2LMHeadModel,
     learning_rate: float,
     # must contain "train", "test", and "text" keys
-    dataset: Dataset,
+    dataset: Union[DatasetDict, Dataset],
     reward_model: ImdbRewardModel,
-    device: torch.device,
 ) -> None:
     cached_dataset: Optional[Dataset] = try_load_preprocessed_dataset()
     dataset_tokenized: Dataset = cached_dataset or dataset.map(  # type: ignore
@@ -114,12 +110,6 @@ def train(
 
     print("ok")
 
-    # Train the model using the device
-    gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(model.value).to(
-        device
-    )
-    loaded_model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
-
     training_args = TrainingArguments(
         output_dir=save_dir,
         overwrite_output_dir=True,
@@ -130,21 +120,22 @@ def train(
         # default transformer package is  5e-5
         learning_rate=learning_rate,
     )
+    conditional_tokenizer = set_up_decoder_tokenizer(tokenizer)
     trainer = Trainer(
-        model=loaded_model,
+        model=gpt2_model,
         args=training_args,
         train_dataset=normalized_dataset["train"],
-        tokenizer=tokenizer,
-        data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
+        tokenizer=conditional_tokenizer,
+        data_collator=DataCollatorForLanguageModeling(tokenizer=conditional_tokenizer, mlm=False),
     )
     trainer.train()
 
     # Save the model
-    loaded_model.save_pretrained(save_dir)
+    gpt2_model.save_pretrained(save_dir)
     test_text: List[str] = normalized_dataset["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
-        model=loaded_model,
+        model=gpt2_model,
         tokenizer=tokenizer,
         sentiment_reward=reward_model,
         limit=1000,
@@ -178,16 +169,16 @@ def main(
     )
     sentiment_reward = ImdbRewardModel(device=device_selected)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
-    train(
+    gpt2_model = ModifiedGPT2LMHeadModel.from_pretrained(model.value).to(device)
+    train_imdb(
         batch_size=batch_size,
         epochs=epochs,
         save_dir=save_dir,
         tokenizer=tokenizer,
-        model=model,
+        gpt2_model=gpt2_model,
         learning_rate=learning_rate,
         dataset=imdb_dataset,
         reward_model=sentiment_reward,
-        device=device_selected,
     )
 
 
