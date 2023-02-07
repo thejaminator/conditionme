@@ -8,6 +8,7 @@ from transformers import (
     TensorType,
     GPT2Tokenizer,
 )
+from transformers.utils import PaddingStrategy
 
 from settings import DEFAULT_REWARD_TOKEN_ID
 
@@ -68,8 +69,8 @@ def batch_tokenize_gpt2(
                 tokenized_ids_with_special_tokens, max_length=tokenizer.model_max_length
             )
         },
-        max_length=tokenizer.model_max_length,
-        return_attention_mask=True
+        padding=PaddingStrategy.LONGEST,
+        return_attention_mask=True,
     )
     inputs_ids = tokenizer_result["input_ids"]
     for i, input_id_row in enumerate(inputs_ids):
@@ -87,4 +88,3 @@ def batch_tokenize_gpt2(
     for key in tokenizer_result:
         new_dict[key] = torch.tensor(tokenizer_result[key])
     return new_dict
-
