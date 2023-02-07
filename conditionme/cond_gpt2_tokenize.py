@@ -25,6 +25,9 @@ def set_up_decoder_tokenizer(
     new_tokenizer.padding_side = "left"
     # we also need to truncate from the left
     new_tokenizer.truncation_side = "left"
+    # TODO: Make this configurable
+    new_tokenizer.reward_token_id = DEFAULT_REWARD_TOKEN_ID
+    new_tokenizer.reward_token = new_tokenizer.decode([DEFAULT_REWARD_TOKEN_ID])
     return new_tokenizer
 
 
@@ -49,11 +52,7 @@ def batch_tokenize_gpt2(
     # TODO: Do the padding in the data collator instead?
     # shallow copy tokenizer to avoid unexpected side effects
     new_tokenizer: PreTrainedTokenizerBase = set_up_decoder_tokenizer(tokenizer)
-    # TODO: implement truncation from the LHS instead of the RHS
     assert len(text) == len(target_rewards)
-    # add the reward token to the start of all text, before we apply the padding
-    # the `forward` method of ModifiedGPT2LMHeadModel will modify the embedding of the reward_token using the position provided
-    reward_token = new_tokenizer.decode([reward_token_id])
     tokenized_ids = new_tokenizer(text)["input_ids"]
     # add reward_token to the start of all text, and add eos_token to the end of all text
     tokenized_ids_with_special_tokens: List[List[int]] = [

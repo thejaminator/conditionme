@@ -119,7 +119,8 @@ def __complete_text_with_reward_batched_helper(
     prompt_completion: Slist[PromptCompletion] = Slist()
     prompts = prompts_and_targets.map(lambda x: x.prompt)
     for i, _prompt in enumerate(prompts):
-        completion = generated_text[i].lstrip(_prompt)
+        full_prompt = new_tokenizer.reward_token + _prompt
+        completion = generated_text[i].lstrip(full_prompt)
         prompt_completion.append(
             PromptCompletion(prompt=_prompt, completion=completion)
         )
