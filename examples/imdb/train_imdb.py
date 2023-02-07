@@ -63,8 +63,8 @@ def train_imdb(
     dataset: Union[DatasetDict, Dataset],
     reward_model: ImdbRewardModel,
 ) -> None:
-    cached_dataset: Optional[Dataset] = try_load_preprocessed_dataset()
-    dataset_tokenized: Dataset = cached_dataset or dataset.map(  # type: ignore
+
+    dataset_tokenized: Dataset = dataset.map(  # type: ignore
         # batched
         lambda examples: {
             "target_reward": reward_model.reward_batch(examples["text"], batch_size=32)
@@ -80,9 +80,6 @@ def train_imdb(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
-    # save the preprocessed dataset if we didn't already have it
-    if not cached_dataset:
-        dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     normalizer: RewardNormalizer = StandardScaleNormalizer.from_rewards(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )

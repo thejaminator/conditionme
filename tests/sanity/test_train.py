@@ -10,7 +10,7 @@ def test_train():
     # Contains train, test set.
     dataset = {
         "train": Dataset.from_dict(
-            {"text": ["this is a test", "this is another test"]}
+            {"text": ["this is a test", "this is another test", "third test" * 5000]}
         ),
         "test": Dataset.from_dict({"text": ["this is a test", "this is another test"]}),
     }
@@ -20,10 +20,9 @@ def test_train():
         existing_head_model=tiny_model
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
-    tiny_tokenizer.pad_token = tiny_tokenizer.eos_token
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
     train_imdb(
-        batch_size=1,
+        batch_size=4,
         epochs=1,
         save_dir="saved",
         tokenizer=tiny_tokenizer,
