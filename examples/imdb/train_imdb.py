@@ -145,7 +145,7 @@ def main(
     epochs: int = 1,
     save_dir: str = "gdrive/My Drive/conditionme",
     model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
-    learning_rate: float = 1e-4,
+    learning_rate: float = 5e-5,
     device: Optional[str] = None,
 ):
     # Optionally save to drive
