@@ -21,7 +21,6 @@ import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
 from conditionme.reward_handler import (
     RewardHandler,
-    DefaultRewardHandler,
     AddRewardToWholeEosHandler,
 )
 from settings import DEFAULT_REWARD_TOKEN_ID
