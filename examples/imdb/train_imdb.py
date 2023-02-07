@@ -104,7 +104,7 @@ def main(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     # update the dataset with the normalized rewards
-    dataset_tokenized = dataset_tokenized.map(
+    normalized_dataset = dataset_tokenized.map(
         lambda x: batch_normalize(x, normalizer=normalizer), batched=True
     )
 
@@ -113,10 +113,10 @@ def main(
 
     # log training target_reward
     training_reward_dist = calculate_distribution_statistics(
-        dist=dataset_tokenized["train"]["target_reward"]  # type: ignore
+        dist=normalized_dataset["train"]["target_reward"]  # type: ignore
     )
     print(f"Training target_reward distribution: {training_reward_dist}")
-    dataset_tokenized.set_format(
+    normalized_dataset.set_format(
         type="torch",
         columns=[
             "input_ids",
@@ -146,7 +146,7 @@ def main(
     trainer = Trainer(
         model=loaded_model,
         args=training_args,
-        train_dataset=dataset_tokenized["train"],
+        train_dataset=normalized_dataset["train"],
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
     )
@@ -154,7 +154,7 @@ def main(
 
     # Save the model
     loaded_model.save_pretrained(save_dir)
-    test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
+    test_text: List[str] = normalized_dataset["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
         model=loaded_model,
