@@ -124,8 +124,6 @@ def train_imdb(
         train_dataset=normalized_dataset["train"],
         tokenizer=conditional_tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer=conditional_tokenizer, mlm=False),
-        # use a cosine annealing scheduler with warmup
-        optimizers=(torch.optim.AdamW, torch.optim.lr_scheduler.CosineAnnealingWarmRestarts),
     )
     trainer.train()
 

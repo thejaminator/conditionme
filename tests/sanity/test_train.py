@@ -10,7 +10,7 @@ def test_train():
     # Contains train, test set.
     dataset = {
         "train": Dataset.from_dict(
-            {"text": ["this is a test", "this is another test", "third test" * 5000]}
+            {"text": ["this", "this is another test", "third test" * 5000]}
         ),
         "test": Dataset.from_dict({"text": ["this is a test", "this is another test"]}),
     }
