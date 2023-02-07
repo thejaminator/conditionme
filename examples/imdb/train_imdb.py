@@ -55,36 +55,23 @@ def batch_normalize(
     return batch
 
 
-def main(
-    batch_size: int = 1,
-    epochs: int = 1,
-    save_dir: str = "gdrive/My Drive/conditionme",
-    model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
-    learning_rate: float = 1e-4,
-):
-    # Optionally save to drive
-    # from google.colab import drive
-    # drive.mount('/content/gdrive')
-
-    # Download and tokenize the dataset
-    imdb_dataset = load_dataset("imdb")
-    # limit the dataset to 100 examples
-    # compute the reward for each example
-    # prefer gpu if available
-    device: torch.device = (
-        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-    )
-    sentiment_reward = ImdbRewardModel(device=device)
-    tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
-    # see https://github.com/huggingface/transformers/issues/2630
-    tokenizer.pad_token = tokenizer.eos_token
+def train(
+    batch_size: int,
+    epochs: int,
+    save_dir: str,
+    tokenizer: AutoTokenizer,
+    model: GPT2ModelOptions,
+    learning_rate: float,
+    # must contain "train", "test", and "text" keys
+    dataset: Dataset,
+    reward_model: ImdbRewardModel,
+    device: torch.device,
+) -> None:
     cached_dataset: Optional[Dataset] = try_load_preprocessed_dataset()
-    dataset_tokenized: Dataset = cached_dataset or imdb_dataset.map(  # type: ignore
+    dataset_tokenized: Dataset = cached_dataset or dataset.map(  # type: ignore
         # batched
         lambda examples: {
-            "target_reward": sentiment_reward.reward_batch(
-                examples["text"], batch_size=32
-            )
+            "target_reward": reward_model.reward_batch(examples["text"], batch_size=32)
         },
         batched=True,
     ).map(
@@ -159,9 +146,48 @@ def main(
         test_text=test_text,
         model=loaded_model,
         tokenizer=tokenizer,
-        sentiment_reward=sentiment_reward,
+        sentiment_reward=reward_model,
         limit=1000,
         normalizer=normalizer,
+    )
+
+
+def main(
+    batch_size: int = 1,
+    epochs: int = 1,
+    save_dir: str = "gdrive/My Drive/conditionme",
+    model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
+    learning_rate: float = 1e-4,
+    device: Optional[str] = None,
+):
+    # Optionally save to drive
+    # from google.colab import drive
+    # drive.mount('/content/gdrive')
+
+    # Download and tokenize the dataset
+    imdb_dataset: Dataset = load_dataset("imdb")  # type: ignore
+    # limit the dataset to 100 examples
+    # compute the reward for each example
+    # prefer gpu if available
+    device_selected: torch.device = (
+        torch.device(device)
+        if device
+        else (
+            torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+        )
+    )
+    sentiment_reward = ImdbRewardModel(device=device_selected)
+    tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
+    train(
+        batch_size=batch_size,
+        epochs=epochs,
+        save_dir=save_dir,
+        tokenizer=tokenizer,
+        model=model,
+        learning_rate=learning_rate,
+        dataset=imdb_dataset,
+        reward_model=sentiment_reward,
+        device=device_selected,
     )
 
 

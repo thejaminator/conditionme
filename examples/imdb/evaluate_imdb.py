@@ -79,7 +79,7 @@ def evaluate_test_set(
     # create csv of rewards
     high_reward_rows = reward_evaluation_rows(
         prompt_completions=high_reward_completions,
-        target_rewards=normalizer.normalize_rewards(high_target_rewards),
+        target_rewards=high_target_rewards,
         actual_rewards=high_target_actual_reward,
     )
     reward_evaluation_table(high_reward_rows).to_csv(
@@ -88,7 +88,7 @@ def evaluate_test_set(
 
     low_reward_rows = reward_evaluation_rows(
         prompt_completions=low_reward_completions,
-        target_rewards=normalizer.normalize_rewards(low_target_rewards),
+        target_rewards=low_target_rewards,
         actual_rewards=low_target_actual_reward,
     )
     reward_evaluation_table(low_reward_rows).to_csv(
