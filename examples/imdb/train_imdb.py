@@ -97,6 +97,9 @@ def main(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
+    # save the preprocessed dataset if we didn't already have it
+    if not cached_dataset:
+        dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     normalizer: RewardNormalizer = StandardScaleNormalizer.from_rewards(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
@@ -113,9 +116,6 @@ def main(
         dist=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     print(f"Training target_reward distribution: {training_reward_dist}")
-    # save the preprocessed dataset if we didn't already have it
-    if not cached_dataset:
-        dataset_tokenized.save_to_disk(preprocessed_dataset_path)
     dataset_tokenized.set_format(
         type="torch",
         columns=[
