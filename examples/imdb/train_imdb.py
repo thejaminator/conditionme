@@ -20,7 +20,7 @@ from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_t
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import (
     RewardNormalizer,
-    StandardScaleNormalizer,
+    StandardScaleNormalizer, DoNothingNormalizer,
 )
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
@@ -80,7 +80,7 @@ def train_imdb(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
-    normalizer: RewardNormalizer = StandardScaleNormalizer.from_rewards(
+    normalizer: RewardNormalizer = DoNothingNormalizer.from_rewards(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     # update the dataset with the normalized rewards
