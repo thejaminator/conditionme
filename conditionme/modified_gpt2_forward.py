@@ -81,6 +81,7 @@ def modfied_transformer_forward(
         # create position_ids on the fly for batch generation
         position_ids = attention_mask.long().cumsum(-1) - 1
         position_ids.masked_fill_(attention_mask == 0, 1)
+        # we only need the last position_ids in the case of decoding
         position_ids = (
             position_ids[:, -1].unsqueeze(-1) if past_length else position_ids
         )
