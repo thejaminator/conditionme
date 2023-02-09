@@ -35,6 +35,7 @@ def evaluate_test_set(
     sentiment_reward: ImdbRewardModel,
     normalizer: RewardNormalizer,
     limit: int,
+    save_dir: Path,
 ):
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
@@ -83,7 +84,7 @@ def evaluate_test_set(
         actual_rewards=high_target_actual_reward,
     )
     reward_evaluation_table(high_reward_rows).to_csv(
-        "high_reward_completions.csv", index=False
+        save_dir / "high_reward_completions.csv", index=False
     )
 
     low_reward_rows = reward_evaluation_rows(
@@ -92,7 +93,7 @@ def evaluate_test_set(
         actual_rewards=low_target_actual_reward,
     )
     reward_evaluation_table(low_reward_rows).to_csv(
-        "low_reward_completions.csv", index=False
+        save_dir / "low_reward_completions.csv", index=False
     )
 
     # Randomly sample target rewards to plot correlation graph
@@ -119,7 +120,9 @@ def evaluate_test_set(
         target_rewards=normalized_target_rewards,
         actual_rewards=sampled_actual_rewards,
     )
-    reward_evaluation_table(sampled_rows).to_csv("sampled_completions.csv", index=False)
+    reward_evaluation_table(sampled_rows).to_csv(
+        save_dir / "sampled_completions.csv", index=False
+    )
     # Plot the correlation graph
     plot_results = plot_scatterplot_and_correlation(
         x=sampled_target_rewards.tolist(),
@@ -128,7 +131,7 @@ def evaluate_test_set(
         xlabel="Target reward",
         ylabel="Actual reward",
     )
-    plot_results.figure.savefig("correlation.png")
+    plot_results.figure.savefig(save_dir / "correlation.png")
     print(f"Correlation results: {plot_results}")
 
 
@@ -175,6 +178,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         sentiment_reward=sentiment_reward,
         limit=limit,
         normalizer=normalizer,
+        save_dir=Path(save_dir),
     )
 
 

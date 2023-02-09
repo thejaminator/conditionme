@@ -1,4 +1,5 @@
 import random
+from pathlib import Path
 from typing import List
 
 from transformers import GPT2LMHeadModel, AutoTokenizer
@@ -32,6 +33,7 @@ def test_evaluate_test_set():
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
     normalizer = DoNothingNormalizer()
+    save_dir = Path("tests/")
     evaluate_test_set(
         test_text=test_text,
         model=conditional_model,
@@ -39,4 +41,5 @@ def test_evaluate_test_set():
         sentiment_reward=sentiment_reward_model,
         normalizer=normalizer,
         limit=10,
+        save_dir=save_dir,
     )

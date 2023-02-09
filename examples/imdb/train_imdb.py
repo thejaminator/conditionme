@@ -20,7 +20,8 @@ from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_t
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import (
     RewardNormalizer,
-    StandardScaleNormalizer, DoNothingNormalizer,
+    StandardScaleNormalizer,
+    DoNothingNormalizer,
 )
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
@@ -123,7 +124,9 @@ def train_imdb(
         args=training_args,
         train_dataset=normalized_dataset["train"],
         tokenizer=conditional_tokenizer,
-        data_collator=DataCollatorForLanguageModeling(tokenizer=conditional_tokenizer, mlm=False),
+        data_collator=DataCollatorForLanguageModeling(
+            tokenizer=conditional_tokenizer, mlm=False
+        ),
     )
     trainer.train()
 
@@ -137,6 +140,7 @@ def train_imdb(
         sentiment_reward=reward_model,
         limit=1000,
         normalizer=normalizer,
+        save_dir=Path(save_dir),
     )
 
 
