@@ -21,7 +21,7 @@ import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
 from conditionme.reward_handler import (
     RewardHandler,
-    AddRewardToWholeEosHandler,
+    ReplaceRewardToWholeEosHandler,
 )
 from settings import DEFAULT_REWARD_TOKEN_ID
 
@@ -34,7 +34,7 @@ class ModifiedGPT2LMHeadModel(
         self,
         existing_head_model: GPT2LMHeadModel,
         logger: Logger = logger,
-        reward_handler: RewardHandler = AddRewardToWholeEosHandler(
+        reward_handler: RewardHandler = ReplaceRewardToWholeEosHandler(
             reward_token_id=DEFAULT_REWARD_TOKEN_ID
         ),
     ):

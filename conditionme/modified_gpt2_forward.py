@@ -149,14 +149,16 @@ def modfied_transformer_forward(
     if inputs_embeds is None:
         inputs_embeds = transformer_model.wte(input_ids)
     position_embeds = transformer_model.wpe(position_ids)
-    hidden_states = inputs_embeds + position_embeds
+
     # Call the reward_handler
-    hidden_states = reward_handler.handle_reward(
+    inputs_embeds_with_reward = reward_handler.handle_reward(
         target_reward=target_reward,
-        hidden_states=hidden_states,
+        hidden_states=inputs_embeds,
         input_ids=input_ids,
         past_length=past_length,
     )
+
+    hidden_states = inputs_embeds_with_reward + position_embeds
 
     if token_type_ids is not None:
         token_type_embeds = transformer_model.wte(token_type_ids)
