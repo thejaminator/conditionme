@@ -39,7 +39,6 @@ def plot_scatterplot_and_correlation(
         y=y,
     )
     confidence_level = 0.95
-    # Dumb hack for older versions of scipy so that we can work with python 3.7
     confidence_interval: ConfidenceInterval = pearson.confidence_interval(
         confidence_level=confidence_level
     )

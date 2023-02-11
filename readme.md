@@ -60,8 +60,7 @@ This library *should* handle the details of this happening. You'll just need to 
 
 The token should be not an eos token, because in some huggingface data collators they mask out eos token ids. That causes your reward token to be masked out.
 
-NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](See plot.
-).  
+NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
 And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.
 
 
