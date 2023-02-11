@@ -10,5 +10,5 @@ slist==0.1.6
 pandas # unfortunately needs to be relaxed to avoid differing python versions conflicts
 pandas-stubs
 seaborn==0.12.2
-matplotlib==3.6.3
+matplotlib>=3.5.3
 scipy==1.10.0
