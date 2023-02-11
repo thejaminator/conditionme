@@ -7,7 +7,7 @@ pytest==7.2.1
 mypy==0.991
 typer==0.7.0
 slist==0.1.6
-pandas==1.5.3
+pandas # unfortunately needs to be relaxed to avoid differing python versions conflicts
 pandas-stubs
 seaborn==0.12.2
 matplotlib==3.6.3
