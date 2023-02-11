@@ -15,11 +15,13 @@ We can't take the [decision transformer implementation](https://huggingface.co/b
 Instead, we'll use a hack to reuse the existing language model's architecture.
 
 1. We reserve the first token to encode the target reward.
-2. The target reward is added to the hidden state of the first token. The positional encoding still remains in the hidden state, so that the model still knows that it should look at the first token.
-3. We finetune our model autoregressively as per usual, just that we'll specify the target reward along with our inputs.
+2. The target reward is added all values of the hidden state of the first token. 
+The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output. 
+3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
 
 ## Toy example - Imdb sentiment analysis
-Using gpt-large as our pretrained model, we finetune our model to match our desied target reward.
+Using gpt-large as our pretrained model, we finetune our model to match our target reward.
+View the training script [here](examples/imdb/train_imdb.py).
 
 ```bash
 git clone git+https://github.com/thejaminator/conditionme.git#egg=conditionme
@@ -37,7 +39,15 @@ export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 
 
 We observe that we can obtain either very bad or very good movie reviews, controlled by the target reward we set.
 
-See csv of results [here](eval_results/large_results) 
+See csv of results [here](eval_results/large_results)
+
+Note: if you try to plot a correlation plot between the target reward and the actual reward, it may look like it doesn't work well between the range of target reward (0.1, 0.9) . This is probably because the training dataset is heavily skewed towards 0.0 or 1.0 rewards.
+<details>
+  <summary>See correlation plot</summary>
+
+![correlation.png](eval_results%2Flarge_results%2Fcorrelation.png)
+</details>
+
 
 
 ## How it works - details
@@ -50,6 +60,11 @@ This library *should* handle the details of this happening. You'll just need to 
 
 The token should be not an eos token, because in some huggingface data collators they mask out eos token ids. That causes your reward token to be masked out.
 
+NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](See plot.
+).  
+And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.
+
+
 
 ## TODO list
 - [x] Validate that it works on a toy example
@@ -57,5 +72,5 @@ The token should be not an eos token, because in some huggingface data collators
 - [ ] Add support for huggingface pretrained models saving
 - [ ] Add support for some other pretrained models - not just gpt2
 - [ ] Write docs on how to make it work with other pretrained models that are not added yet.
-- [ ] Add examples for RLHF tasks - e.g. Openai's summarization
+- [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is already available](https://huggingface.co/OpenAssistant) 
 - [ ] Add support for online training
