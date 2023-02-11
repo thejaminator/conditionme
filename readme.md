@@ -69,7 +69,7 @@ And you'll need to be more careful with how your rewards can get tokenized into 
 - [x] Validate that it works on a toy example
 - [ ] Reach out to others and ask if the hack makes sense
 - [ ] Add support for huggingface pretrained models saving
+- [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is already available](https://huggingface.co/OpenAssistant)
 - [ ] Add support for some other pretrained models - not just gpt2
 - [ ] Write docs on how to make it work with other pretrained models that are not added yet.
-- [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is already available](https://huggingface.co/OpenAssistant) 
 - [ ] Add support for online training
