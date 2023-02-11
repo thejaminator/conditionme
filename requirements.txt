@@ -11,4 +11,4 @@ pandas # unfortunately needs to be relaxed to avoid differing python versions co
 pandas-stubs
 seaborn==0.12.2
 matplotlib>=3.5.3
-scipy>=1.7.3
+scipy>=1.10.0
