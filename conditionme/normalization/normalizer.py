@@ -1,11 +1,12 @@
 import json
 from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
-from typing import Any, Sequence, Dict, List
+from typing import Any, Sequence, Dict, List, Type
 
 from slist import Slist
 
-from conditionme.type_check.utils import assert_not_none
+from conditionme.type_check.utils import assert_not_none, assert_never
 
 
 class RewardNormalizer(ABC):
@@ -165,3 +166,24 @@ class StandardTimes1000Normalizer(StandardScaleNormalizer):
     # Says that the implementation of decision transformers scale the rewards by 1000
     def normalize_reward(self, reward: float) -> float:
         return 1000 * super().normalize_reward(reward)
+
+
+# Enum of normalizers
+class NormalizerOptions(str, Enum):
+    min_max = "min_max"
+    standard_scale = "standard_scale"
+    standard_times_1000 = "standard_times_1000"
+    do_nothing = "do_nothing"
+
+
+def get_normalizer(normalizer_option: NormalizerOptions) -> Type[RewardNormalizer]:
+    if normalizer_option is NormalizerOptions.min_max:
+        return MinMaxNormalizer
+    elif normalizer_option is NormalizerOptions.standard_scale:
+        return StandardScaleNormalizer
+    elif normalizer_option is NormalizerOptions.standard_times_1000:
+        return StandardTimes1000Normalizer
+    elif normalizer_option is NormalizerOptions.do_nothing:
+        return DoNothingNormalizer
+    else:
+        assert_never(normalizer_option)

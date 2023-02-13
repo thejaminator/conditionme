@@ -4,6 +4,8 @@ from conditionme.normalization.normalizer import (
     DoNothingNormalizer,
     RewardNormalizer,
     StandardScaleNormalizer,
+    get_normalizer,
+    NormalizerOptions,
 )
 
 
@@ -28,3 +30,16 @@ def test_normalizer_scale():
     normalizer = StandardScaleNormalizer(mean=1, std=1)
     assert normalizer.normalize_reward(1) == 0
     assert normalizer.normalize_reward(2) == 1
+
+
+def test_normalizer_from_rewards():
+    normalizer: StandardScaleNormalizer = StandardScaleNormalizer.from_rewards(
+        [1, 2, 3]
+    )
+    assert normalizer.mean == 2
+    assert normalizer.std == 1
+
+
+def test_get_normalizer():
+    normalizer_type = get_normalizer(NormalizerOptions.standard_scale)
+    assert isinstance(normalizer_type, type(StandardScaleNormalizer))

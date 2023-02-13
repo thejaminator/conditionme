@@ -3,7 +3,7 @@ Trains GPT2 on IMDB dataset
 """
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 import torch
 import typer
@@ -22,6 +22,8 @@ from conditionme.normalization.normalizer import (
     RewardNormalizer,
     StandardScaleNormalizer,
     DoNothingNormalizer,
+    NormalizerOptions,
+    get_normalizer,
 )
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
@@ -63,6 +65,7 @@ def train_imdb(
     # must contain "train", "test", and "text" keys
     dataset: Union[DatasetDict, Dataset],
     reward_model: ImdbRewardModel,
+    normalizer_type: Type[RewardNormalizer],
 ) -> None:
 
     dataset_tokenized: Dataset = dataset.map(  # type: ignore
@@ -81,7 +84,7 @@ def train_imdb(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
-    normalizer: RewardNormalizer = DoNothingNormalizer.from_rewards(
+    normalizer: RewardNormalizer = normalizer_type.from_rewards(
         rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
     )
     # update the dataset with the normalized rewards
@@ -151,7 +154,10 @@ def main(
     model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
     learning_rate: float = 5e-5,
     device: Optional[str] = None,
+    normalizer: NormalizerOptions = NormalizerOptions.do_nothing,
 ):
+
+    normalizer_type: Type[RewardNormalizer] = get_normalizer(normalizer)
     # Optionally save to drive
     # from google.colab import drive
     # drive.mount('/content/gdrive')
@@ -180,11 +186,12 @@ def main(
         learning_rate=learning_rate,
         dataset=imdb_dataset,
         reward_model=sentiment_reward,
+        normalizer_type=normalizer_type,
     )
 
 
 if __name__ == "__main__":
     # run with
     # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 10 --epochs 1
-    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-medium --save-dir saved_medium
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-medium --save-dir saved_medium --normalizer min_max
     typer.run(main)
