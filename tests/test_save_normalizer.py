@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 from conditionme.normalization.normalizer import (
     DoNothingNormalizer,
@@ -38,6 +39,10 @@ def test_normalizer_from_rewards():
     )
     assert normalizer.mean == 2
     assert normalizer.std == 1
+    to_normalize: float = 1
+    assert normalizer.normalize_reward(to_normalize) == -1
+    multiple_to_normalize: List[float] = [1, 2, 3]
+    assert normalizer.normalize_rewards(multiple_to_normalize) == [-1, 0, 1]
 
 
 def test_get_normalizer():

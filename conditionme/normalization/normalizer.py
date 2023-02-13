@@ -58,6 +58,8 @@ class RewardNormalizer(ABC):
             return StandardScaleNormalizer.from_dict(_dict)
         elif name == DoNothingNormalizer.name():
             return DoNothingNormalizer()
+        elif name == Times1000.name():
+            return Times1000()
         elif name == StandardTimes1000Normalizer.name():
             return StandardTimes1000Normalizer.from_dict(_dict)
         else:
@@ -123,6 +125,25 @@ class DoNothingNormalizer(RewardNormalizer):
         return DoNothingNormalizer()
 
 
+class Times1000(RewardNormalizer):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def from_rewards(rewards: Sequence[float]) -> "Times1000":
+        return Times1000()
+
+    def normalize_reward(self, reward: float) -> float:
+        return reward * 1000
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"name": self.name()}
+
+    @staticmethod
+    def from_dict(_dict: Dict[str, Any]) -> "Times1000":
+        return Times1000()
+
+
 class StandardScaleNormalizer(RewardNormalizer):
     def __init__(
         self,
@@ -174,6 +195,7 @@ class NormalizerOptions(str, Enum):
     standard_scale = "standard_scale"
     standard_times_1000 = "standard_times_1000"
     do_nothing = "do_nothing"
+    times_1000 = "times_1000"
 
 
 def get_normalizer(normalizer_option: NormalizerOptions) -> Type[RewardNormalizer]:
@@ -185,5 +207,7 @@ def get_normalizer(normalizer_option: NormalizerOptions) -> Type[RewardNormalize
         return StandardTimes1000Normalizer
     elif normalizer_option is NormalizerOptions.do_nothing:
         return DoNothingNormalizer
+    elif normalizer_option is NormalizerOptions.times_1000:
+        return Times1000
     else:
         assert_never(normalizer_option)
