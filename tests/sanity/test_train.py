@@ -2,7 +2,7 @@ from datasets import Dataset, DatasetDict
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
-from conditionme.normalization.normalizer import RewardNormalizer, DoNothingNormalizer
+from conditionme.normalization.normalizer import Times1000
 from examples.imdb.train_imdb import train_imdb
 from tests.sanity.test_evaluate_test_set import MockImdbRewardModel
 
@@ -31,5 +31,5 @@ def test_train():
         reward_model=sentiment_reward_model,
         learning_rate=0.0001,
         dataset=dataset_hg,
-        normalizer_type=DoNothingNormalizer,
+        normalizer_type=Times1000,
     )
