@@ -31,14 +31,9 @@ class ModifiedGPT2LMHeadModel(
     def __init__(
         self,
         existing_head_model: GPT2LMHeadModel,
-        logger: Logger = logger,
     ):
         super().__init__()
         self.existing_head_model: GPT2LMHeadModel = existing_head_model
-        self.generation_config = existing_head_model.generation_config
-        self.main_input_name = existing_head_model.main_input_name
-        self.logger = logger
-        self.config = existing_head_model.config
         self.embed_return = torch.nn.Linear(
             1, self.existing_head_model.transformer.config.hidden_size
         )

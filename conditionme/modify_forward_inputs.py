@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import torch
+from torch import LongTensor
 
 
 @dataclass
@@ -9,7 +10,7 @@ class NewForwardInputs:
     attention_mask: Optional[torch.Tensor]
     inputs_embeds: Optional[torch.Tensor]
     position_ids: Optional[torch.Tensor]
-    labels: Optional[torch.Tensor]
+    labels: Optional[torch.LongTensor]
 
 
 def forward_inputs_with_rewards(
@@ -33,8 +34,8 @@ def forward_inputs_with_rewards(
     new_inputs_embeds = torch.cat([reward_embeds.unsqueeze(1), inputs_embeds], dim=1)
     # labels is a 2d tensor of shape (batch_size, sequence_length)
     # label the reward embedding as -100 so that it is of shape (batch_size, sequence_length + 1)
-    new_labels = (
-        torch.cat(
+    new_labels: Optional[LongTensor] = (
+        torch.cat( # type: ignore [assignment]
             [
                 # -100 means that the reward embedding is masked. dtype long
                 -100 * torch.ones_like(target_reward).unsqueeze(1).long(),
