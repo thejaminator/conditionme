@@ -60,7 +60,9 @@ def test_gpt_sanity():
     gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(
         "sshleifer/tiny-gpt2"
     ).to(device)
-    model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
+    model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(
+        loaded_model=gpt2_model
+    )
 
     # Optionally save to drive
     training_args = TrainingArguments(
@@ -98,7 +100,9 @@ def test_complete_text_with_reward_batched():
     gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(
         "sshleifer/tiny-gpt2"
     ).to(device)
-    model = ModifiedGPT2LMHeadModel(existing_head_model=gpt2_model)
+    model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(
+        loaded_model=gpt2_model
+    )
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
     tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     # Take 500 test set

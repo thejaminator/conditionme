@@ -11,10 +11,11 @@ from transformers import (
     GenerationConfig,
     LogitsProcessorList,
     StoppingCriteriaList,
+    GPT2Config,
 )
 from transformers.generation.utils import GenerateOutput
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
-from transformers.modeling_utils import ModuleUtilsMixin
+from transformers.modeling_utils import ModuleUtilsMixin, PreTrainedModel
 from transformers.utils import PushToHubMixin
 
 from conditionme.logger import logger
@@ -24,19 +25,23 @@ from conditionme.modify_forward_inputs import (
 )
 
 
-class ModifiedGPT2LMHeadModel(
-    nn.Module, ModuleUtilsMixin, PushToHubMixin, GenerationMixin
-):
-    # todo: We need to inherit PreTrainedModel to work with the trainer properly. but now we don't actually need
-    def __init__(
-        self,
-        existing_head_model: GPT2LMHeadModel,
-    ):
-        super().__init__()
-        self.pretrained_model: GPT2LMHeadModel = existing_head_model
+class ModifiedGPT2LMHeadModel(PreTrainedModel):
+    config_class = GPT2Config
+    def __init__(self, config: GPT2Config):
+        super().__init__(config)
+        self.pretrained_model: GPT2LMHeadModel = GPT2LMHeadModel(config)
         self.embed_return = torch.nn.Linear(
             1, self.pretrained_model.transformer.config.hidden_size
         )
+
+    @staticmethod
+    def from_loaded_pretrained_model(
+        loaded_model: GPT2LMHeadModel,
+    ):
+        config = loaded_model.config
+        model = ModifiedGPT2LMHeadModel(config)
+        model.pretrained_model = loaded_model
+        return model
 
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method
@@ -52,40 +57,6 @@ class ModifiedGPT2LMHeadModel(
         )
         final_kwargs["target_reward"] = target_reward
         return final_kwargs
-
-    @classmethod
-    def from_pretrained(
-        cls,
-        pretrained_model_name_or_path: Optional[Union[str, os.PathLike]],
-        *model_args,
-        **kwargs,
-    ):
-        loaded_head_model = GPT2LMHeadModel.from_pretrained(
-            pretrained_model_name_or_path, *model_args, **kwargs
-        )
-        return cls(loaded_head_model)
-
-    def save_pretrained(
-        self,
-        save_directory: Union[str, os.PathLike],
-        is_main_process: bool = True,
-        state_dict: Optional[dict] = None,
-        save_function: Callable = torch.save,
-        push_to_hub: bool = False,
-        max_shard_size: Union[int, str] = "10GB",
-        safe_serialization: bool = False,
-        **kwargs,
-    ):
-        self.pretrained_model.save_pretrained(
-            save_directory=save_directory,
-            is_main_process=is_main_process,
-            state_dict=state_dict,
-            save_function=save_function,
-            push_to_hub=push_to_hub,
-            max_shard_size=max_shard_size,
-            safe_serialization=safe_serialization,
-            **kwargs,
-        )
 
     # For GenerationMixin
     def can_generate(self, **kwargs):

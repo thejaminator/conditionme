@@ -27,8 +27,8 @@ class MockImdbRewardModel(ImdbRewardModel):
 def test_evaluate_test_set():
     test_text = ["this", "this is another test test test"]
     tiny_model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained("sshleifer/tiny-gpt2")
-    conditional_model: ModifiedGPT2LMHeadModel = ModifiedGPT2LMHeadModel(
-        existing_head_model=tiny_model
+    conditional_model: ModifiedGPT2LMHeadModel = (
+        ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
