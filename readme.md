@@ -11,12 +11,16 @@ I haven't found a library that allows you to easily retrain existing language mo
 There could be some aspects for training in a decision transformer fashion that could
 
 ## How does it work?
-We can't take the [decision transformer implementation](https://huggingface.co/blog/decision-transformers) and just make our existing language model work with it. This is because the existing language model you have probably won't have the same architecture as the decision transformer.
-Instead, we'll use a hack to reuse the existing language model's architecture.
+We can't take the [decision transformer implementation](https://huggingface.co/blog/decision-transformers) and just make our existing language model work with the decision transformer architecture. 
+There's a few simplifications that we need to make it work.
+1. Instead of multiple (reward-to-go, state, action) in an rollout/episode, we only have one single reward per episode. 
+2. Rather than having separate state and action heads, we'll continue using the same language model head. 
+So it becomes (reward-to-go, text completion) instead.
 
+What we do is:
 1. We reserve the first token to encode the target reward.
 2. The target reward is added all values of the hidden state of the first token. 
-The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output. 
+The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output.
 3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
 
 ## Toy example - Imdb sentiment analysis
