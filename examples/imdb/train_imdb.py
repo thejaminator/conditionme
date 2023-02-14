@@ -14,6 +14,7 @@ from transformers import (
     Trainer,
     DataCollatorForLanguageModeling,
     BatchEncoding,
+    GPT2LMHeadModel,
 )
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_tokenizer
@@ -176,7 +177,10 @@ def main(
     )
     sentiment_reward = ImdbRewardModel(device=device_selected)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
-    gpt2_model = ModifiedGPT2LMHeadModel.from_pretrained(model.value).to(device)
+    loaded_model = GPT2LMHeadModel.from_pretrained(model.value)
+    gpt2_model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(
+        device
+    )
     train_imdb(
         batch_size=batch_size,
         epochs=epochs,
