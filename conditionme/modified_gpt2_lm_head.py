@@ -33,9 +33,9 @@ class ModifiedGPT2LMHeadModel(
         existing_head_model: GPT2LMHeadModel,
     ):
         super().__init__()
-        self.existing_head_model: GPT2LMHeadModel = existing_head_model
+        self.pretrained_model: GPT2LMHeadModel = existing_head_model
         self.embed_return = torch.nn.Linear(
-            1, self.existing_head_model.transformer.config.hidden_size
+            1, self.pretrained_model.transformer.config.hidden_size
         )
 
     # For GenerationMixin
@@ -47,7 +47,7 @@ class ModifiedGPT2LMHeadModel(
         past_key_values=None,
         **kwargs,
     ):
-        final_kwargs = self.existing_head_model.prepare_inputs_for_generation(
+        final_kwargs = self.pretrained_model.prepare_inputs_for_generation(
             input_ids=input_ids, past_key_values=past_key_values, **kwargs
         )
         final_kwargs["target_reward"] = target_reward
@@ -76,7 +76,7 @@ class ModifiedGPT2LMHeadModel(
         safe_serialization: bool = False,
         **kwargs,
     ):
-        self.existing_head_model.save_pretrained(
+        self.pretrained_model.save_pretrained(
             save_directory=save_directory,
             is_main_process=is_main_process,
             state_dict=state_dict,
@@ -117,7 +117,7 @@ class ModifiedGPT2LMHeadModel(
         return_dict = (
             return_dict
             if return_dict is not None
-            else self.existing_head_model.config.use_return_dict
+            else self.pretrained_model.config.use_return_dict
         )
         # START OF EDITS
         new_inputs: NewForwardInputs = (
@@ -138,14 +138,14 @@ class ModifiedGPT2LMHeadModel(
                 )
                 if attention_mask is not None
                 else None,
-                inputs_embeds=self.existing_head_model.transformer.wte(input_ids),
+                inputs_embeds=self.pretrained_model.transformer.wte(input_ids),
                 position_ids=position_ids,
                 labels=labels,
             )
             if past_key_values and len(past_key_values) > 0
             else forward_inputs_with_rewards(
                 reward_embedding=self.embed_return,
-                wte_embedding=self.existing_head_model.transformer.wte,
+                wte_embedding=self.pretrained_model.transformer.wte,
                 target_reward=target_reward,
                 input_ids=input_ids,
                 attention_mask=attention_mask,
@@ -154,7 +154,7 @@ class ModifiedGPT2LMHeadModel(
             )
         )
 
-        transformer_outputs = self.existing_head_model.transformer.forward(
+        transformer_outputs = self.pretrained_model.transformer.forward(
             inputs_embeds=new_inputs.inputs_embeds,
             past_key_values=past_key_values,
             attention_mask=new_inputs.attention_mask,
@@ -172,13 +172,13 @@ class ModifiedGPT2LMHeadModel(
         hidden_states = transformer_outputs[0]
 
         # Set device for model parallelism
-        if self.existing_head_model.model_parallel:
-            torch.cuda.set_device(self.existing_head_model.transformer.first_device)
+        if self.pretrained_model.model_parallel:
+            torch.cuda.set_device(self.pretrained_model.transformer.first_device)
             hidden_states = hidden_states.to(
-                self.existing_head_model.lm_head.weight.device
+                self.pretrained_model.lm_head.weight.device
             )
 
-        lm_logits = self.existing_head_model.lm_head(hidden_states)
+        lm_logits = self.pretrained_model.lm_head(hidden_states)
 
         loss = None
         if labels is not None:
