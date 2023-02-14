@@ -16,6 +16,7 @@ There's a few simplifications that we need to make it work.
 1. Instead of multiple (reward-to-go, state, action) in an rollout/episode, we only have one single reward per episode. 
 2. Rather than having separate state and action heads, we'll continue using the same language model head. 
 So it becomes (reward-to-go, text completion) instead.
+3. We'll just use whatever existing positional encoding from the existing language model.
 
 What we do is:
 1. We reserve the first token to encode the target reward.
@@ -57,12 +58,10 @@ Note: if you try to plot a correlation plot between the target reward and the ac
 ## How it works - details
 
 We reserve the first token to encode the target reward. Or rather, the first unmasked token. 
-This is because we pad to the left for batched training, so we can't just use the first token - it would be a pad token that is masked out.
 
-This means that when we pass input ids to the model for training, the first token id will always be reserved to be the target reward token.
-This library *should* handle the details of this happening. You'll just need to specify what the reserved token should be.
+This means that when we pass input ids to the model for training, you need to make sure that you only pass model_max_length - 1 tokens.  
+This library *should* handle the details of this happening.
 
-The token should be not an eos token, because in some huggingface data collators they mask out eos token ids. That causes your reward token to be masked out.
 
 NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
 And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.

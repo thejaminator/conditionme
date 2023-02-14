@@ -6,14 +6,10 @@ import torch
 from transformers import GPT2Model
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
-from conditionme.reward_handler import RewardHandler
-
-
+# TODO: This can just be the same thing?
 @typing.no_type_check
 def modfied_transformer_forward(
-    target_reward: torch.Tensor,  # same len as input_ids
     transformer_model: GPT2Model,
-    reward_handler: RewardHandler,
     logger: Logger,
     input_ids: torch.LongTensor,
     past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
@@ -150,15 +146,7 @@ def modfied_transformer_forward(
         inputs_embeds = transformer_model.wte(input_ids)
     position_embeds = transformer_model.wpe(position_ids)
 
-    # Call the reward_handler
-    inputs_embeds_with_reward = reward_handler.handle_reward(
-        target_reward=target_reward,
-        hidden_states=inputs_embeds,
-        input_ids=input_ids,
-        past_length=past_length,
-    )
-
-    hidden_states = inputs_embeds_with_reward + position_embeds
+    hidden_states = inputs_embeds + position_embeds
 
     if token_type_ids is not None:
         token_type_embeds = transformer_model.wte(token_type_ids)

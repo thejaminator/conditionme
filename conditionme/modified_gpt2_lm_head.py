@@ -17,13 +17,11 @@ from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from transformers.modeling_utils import ModuleUtilsMixin
 from transformers.utils import PushToHubMixin
 
-import conditionme.modified_gpt2_forward
 from conditionme.logger import logger
-from conditionme.reward_handler import (
-    RewardHandler,
-    ReplaceRewardToWholeEosHandler, AddRewardToWholeEosHandler,
+from conditionme.modify_forward_inputs import (
+    NewForwardInputs,
+    forward_inputs_with_rewards,
 )
-from settings import DEFAULT_REWARD_TOKEN_ID
 
 
 class ModifiedGPT2LMHeadModel(
@@ -34,17 +32,16 @@ class ModifiedGPT2LMHeadModel(
         self,
         existing_head_model: GPT2LMHeadModel,
         logger: Logger = logger,
-        reward_handler: RewardHandler = AddRewardToWholeEosHandler(
-            reward_token_id=DEFAULT_REWARD_TOKEN_ID
-        ),
     ):
         super().__init__()
         self.existing_head_model: GPT2LMHeadModel = existing_head_model
         self.generation_config = existing_head_model.generation_config
         self.main_input_name = existing_head_model.main_input_name
         self.logger = logger
-        self.reward_handler = reward_handler
         self.config = existing_head_model.config
+        self.embed_return = torch.nn.Linear(
+            1, self.existing_head_model.transformer.config.hidden_size
+        )
 
     # For GenerationMixin
     # `generate` of GenerationMixin calls this method
@@ -102,13 +99,12 @@ class ModifiedGPT2LMHeadModel(
     def forward(
         self,
         target_reward: torch.Tensor,
-        input_ids: Optional[torch.LongTensor] = None,
+        input_ids: torch.LongTensor,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         token_type_ids: Optional[torch.LongTensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         head_mask: Optional[torch.FloatTensor] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
         encoder_hidden_states: Optional[torch.Tensor] = None,
         encoder_attention_mask: Optional[torch.FloatTensor] = None,
         labels: Optional[torch.LongTensor] = None,
@@ -128,28 +124,56 @@ class ModifiedGPT2LMHeadModel(
             if return_dict is not None
             else self.existing_head_model.config.use_return_dict
         )
-
-        transformer_outputs = (
-            conditionme.modified_gpt2_forward.modfied_transformer_forward(
-                target_reward=target_reward,
-                transformer_model=self.existing_head_model.transformer,
-                reward_handler=self.reward_handler,
-                logger=self.logger,
-                input_ids=input_ids,
-                past_key_values=past_key_values,
-                attention_mask=attention_mask,
-                token_type_ids=token_type_ids,
+        # START OF EDITS
+        new_inputs: NewForwardInputs = (
+            # If we are using past key values, we have already added the reward embedding to the input
+            # So here we just pass the existing inputs
+            # todo: refactor
+            NewForwardInputs(
+                attention_mask=torch.cat(
+                    [
+                        # Attention mask is (batch_size, sequence_length)
+                        # add a 1 to the attention mask to account for the reward embedding
+                        torch.ones(
+                            attention_mask.shape[0], 1, device=attention_mask.device
+                        ),
+                        attention_mask,
+                    ],
+                    dim=1,
+                )
+                if attention_mask is not None
+                else None,
+                inputs_embeds=self.existing_head_model.transformer.wte(input_ids),
                 position_ids=position_ids,
-                head_mask=head_mask,
-                inputs_embeds=inputs_embeds,
-                encoder_hidden_states=encoder_hidden_states,
-                encoder_attention_mask=encoder_attention_mask,
-                use_cache=use_cache,
-                output_attentions=output_attentions,
-                output_hidden_states=output_hidden_states,
-                return_dict=return_dict,
+                labels=labels,
+            )
+            if past_key_values and len(past_key_values) > 0
+            else forward_inputs_with_rewards(
+                reward_embedding=self.embed_return,
+                wte_embedding=self.existing_head_model.transformer.wte,
+                target_reward=target_reward,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                position_ids=position_ids,
+                labels=labels,
             )
         )
+
+        transformer_outputs = self.existing_head_model.transformer.forward(
+            inputs_embeds=new_inputs.inputs_embeds,
+            past_key_values=past_key_values,
+            attention_mask=new_inputs.attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=new_inputs.position_ids,
+            head_mask=head_mask,
+            encoder_hidden_states=encoder_hidden_states,
+            encoder_attention_mask=encoder_attention_mask,
+            use_cache=use_cache,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+        )
+        labels = new_inputs.labels
         hidden_states = transformer_outputs[0]
 
         # Set device for model parallelism

@@ -39,4 +39,4 @@ def test_batch_normalize():
     dataset_normalized = dataset_rewarded.map(
         lambda x: batch_normalize(x, normalizer=normalizer), batched=True
     )
-    assert dataset_normalized["train"]["target_reward"][0] == 1000
+    assert dataset_normalized["train"]["target_reward"][0] == 1000  # type: ignore
