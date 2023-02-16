@@ -6,8 +6,14 @@ name: release & publish workflow
 on:
   # Triggers the workflow on push events but only for the master branch
   push:
+    # triggers when there is the word "release" in the commit message
+    branches:
+      - main
+      - master
+    # Sequence of patterns matched against refs/tags
     tags:
-      - 'v*'
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
