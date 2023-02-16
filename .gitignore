@@ -9,6 +9,7 @@
 _tmp*
 tmp*
 tags
+poetry.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
