@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "conditionme"
-version = "0.1.6"
+version = "0.0.1"
 homepage = "https://github.com/thejaminator/conditionme"
 description = "A library for finetuning language models via decision transformer / conditioning / upside-down reinforcement learning!"
 authors = ["James Chua <chuajamessh@gmail.com>"]
