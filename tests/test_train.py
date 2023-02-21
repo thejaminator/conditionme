@@ -5,7 +5,7 @@ from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
 from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import Times1000
 from examples.imdb.train_imdb import train_imdb
-from tests.sanity.test_evaluate_test_set import MockImdbRewardModel
+from tests.test_evaluate_test_set import MockImdbRewardModel
 
 
 def test_train():
@@ -27,7 +27,7 @@ def test_train():
     train_imdb(
         batch_size=4,
         epochs=1,
-        save_dir="saved",
+        save_dir="sanity/saved",
         decision_tokenizer=decision_tokenizer,
         gpt2_model=conditional_model,
         reward_model=sentiment_reward_model,
