@@ -23,6 +23,13 @@ torch = {version = "^1.4.0"}
 tqdm = {version = "^4.62.0"}
 transformers = {version = "*"}
 accelerate = {version = "*"}
+datasets = {version = "*"}
+slist = {version = "*"}
+typer = {version = "*"}
+pandas = {version = "*"}
+seaborn = {version = "*"}
+matplotlib = {version = "^3.5.3"}
+scipy = {version = "^1.10.0"}
 
 [tool.poetry.dev-dependencies]
 black  = { version = "^21.5b2", optional = true}
