@@ -5,7 +5,7 @@ import torch
 from slist import Slist
 from transformers import PreTrainedTokenizerBase, BatchEncoding, GenerationConfig
 
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer
 
 
@@ -29,7 +29,7 @@ def complete_text_with_reward(
     prompt: str,
     target_reward: float,
     tokenizer: PreTrainedTokenizerBase,
-    model: ModifiedGPT2LMHeadModel,
+    model: DecisionGPT2LMHeadModel,
     temperature: float = 1.0,
     max_new_tokens: int = 100,
 ) -> PromptCompletion:
@@ -46,7 +46,7 @@ def complete_text_with_reward_batched(
     prompt: List[str],
     target_rewards: List[float],
     tokenizer: PreTrainedTokenizerBase,
-    model: ModifiedGPT2LMHeadModel,
+    model: DecisionGPT2LMHeadModel,
     temperature: float = 1.0,
     batch_size: int = 4,
     max_new_tokens: int = 100,
@@ -74,7 +74,7 @@ def complete_text_with_reward_batched(
 def __complete_text_with_reward_batched_helper(
     prompts_and_targets: Slist[PromptWithTargetReward],
     tokenizer: PreTrainedTokenizerBase,
-    model: ModifiedGPT2LMHeadModel,
+    model: DecisionGPT2LMHeadModel,
     temperature: float,
     max_new_tokens: int,
 ) -> Slist[PromptCompletion]:

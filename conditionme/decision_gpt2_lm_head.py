@@ -19,7 +19,7 @@ from conditionme.modify_forward_inputs import (
 )
 
 
-class ModifiedGPT2LMHeadModel(PreTrainedModel):
+class DecisionGPT2LMHeadModel(PreTrainedModel):
     config_class = GPT2Config
     def __init__(self, config: GPT2Config):
         super().__init__(config)
@@ -33,7 +33,7 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
         loaded_model: GPT2LMHeadModel,
     ):
         config = loaded_model.config
-        model = ModifiedGPT2LMHeadModel(config)
+        model = DecisionGPT2LMHeadModel(config)
         model.pretrained_model = loaded_model
         return model
 

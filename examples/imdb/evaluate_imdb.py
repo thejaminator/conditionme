@@ -8,7 +8,7 @@ from datasets import Dataset, load_dataset
 from transformers import AutoTokenizer
 
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.normalization.normalizer import RewardNormalizer
 from conditionme.rollout.rollout_model import (
     PromptCompletion,
@@ -30,7 +30,7 @@ from examples.imdb.reload_dataset import (
 
 def evaluate_test_set(
     test_text: List[str],
-    model: ModifiedGPT2LMHeadModel,
+    model: DecisionGPT2LMHeadModel,
     decision_tokenizer: AutoTokenizer,
     sentiment_reward: ImdbRewardModel,
     normalizer: RewardNormalizer,
@@ -143,7 +143,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     normalizer = RewardNormalizer.load_normalizer(Path(save_dir))
     print(f"Loading model from {save_dir}")
     # Load the model using the device
-    model = ModifiedGPT2LMHeadModel.from_pretrained(save_dir).to(device)
+    model = DecisionGPT2LMHeadModel.from_pretrained(save_dir).to(device)
     sentiment_reward = ImdbRewardModel(device=device)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     print("Loading dataset")

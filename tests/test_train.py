@@ -2,7 +2,7 @@ from datasets import Dataset, DatasetDict
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
 from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.normalization.normalizer import Times1000
 from examples.imdb.train_imdb import train_imdb
 from tests.test_evaluate_test_set import MockImdbRewardModel
@@ -18,8 +18,8 @@ def test_train():
     }
     dataset_hg = DatasetDict(dataset)
     tiny_model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained("sshleifer/tiny-gpt2")
-    conditional_model: ModifiedGPT2LMHeadModel = (
-        ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
+    conditional_model: DecisionGPT2LMHeadModel = (
+        DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     decision_tokenizer = create_decision_tokenizer(tiny_tokenizer)

@@ -4,7 +4,7 @@ from typing import List
 
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.normalization.normalizer import DoNothingNormalizer
 from examples.imdb.evaluate_imdb import evaluate_test_set
 from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
@@ -27,8 +27,8 @@ class MockImdbRewardModel(ImdbRewardModel):
 def test_evaluate_test_set():
     test_text = ["this", "this is another test test test"]
     tiny_model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained("sshleifer/tiny-gpt2")
-    conditional_model: ModifiedGPT2LMHeadModel = (
-        ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
+    conditional_model: DecisionGPT2LMHeadModel = (
+        DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     sentiment_reward_model = MockImdbRewardModel(device="cpu")

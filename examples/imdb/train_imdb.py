@@ -18,7 +18,7 @@ from transformers import (
 )
 
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer, DecisionTokenizer
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.normalization.normalizer import (
     RewardNormalizer,
     NormalizerOptions,
@@ -55,7 +55,7 @@ def train_imdb(
     epochs: int,
     save_dir: str,
     decision_tokenizer: DecisionTokenizer,
-    gpt2_model: ModifiedGPT2LMHeadModel,
+    gpt2_model: DecisionGPT2LMHeadModel,
     learning_rate: float,
     # must contain "train", "test", and "text" keys
     dataset: Union[DatasetDict, Dataset],
@@ -172,7 +172,7 @@ def main(
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     decision_tokenizer = create_decision_tokenizer(tokenizer)
     loaded_model = GPT2LMHeadModel.from_pretrained(model.value)
-    gpt2_model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(
+    gpt2_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(
         device
     )
     train_imdb(

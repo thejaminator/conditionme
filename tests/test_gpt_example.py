@@ -11,7 +11,7 @@ from transformers import (
     DataCollatorForLanguageModeling,
 )
 
-from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
@@ -60,7 +60,7 @@ def test_gpt_sanity():
     gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(
         "sshleifer/tiny-gpt2"
     ).to(device)
-    model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(
+    model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(
         loaded_model=gpt2_model
     )
 
@@ -82,7 +82,7 @@ def test_gpt_sanity():
     )
     trainer.train()
     model.save_pretrained("test_gpt_sanity")
-    new_model = ModifiedGPT2LMHeadModel.from_pretrained("test_gpt_sanity")
+    new_model = DecisionGPT2LMHeadModel.from_pretrained("test_gpt_sanity")
 
 
 def test_complete_text_with_reward_batched():
@@ -100,7 +100,7 @@ def test_complete_text_with_reward_batched():
     gpt2_model: GPT2LMHeadModel = AutoModelForCausalLM.from_pretrained(
         "sshleifer/tiny-gpt2"
     ).to(device)
-    model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(
+    model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(
         loaded_model=gpt2_model
     )
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
