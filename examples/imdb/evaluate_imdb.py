@@ -48,14 +48,14 @@ def evaluate_test_set(
     # complete the text
     high_target_rewards = [1.0] * len(first_3_tokens)
     high_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
-        prompt=first_3_tokens,
+        prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
         target_rewards=normalizer.normalize_rewards(high_target_rewards),
     )
     low_target_rewards = [0.0] * len(first_3_tokens)
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
-        prompt=first_3_tokens,
+        prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
         target_rewards=normalizer.normalize_rewards(low_target_rewards),
@@ -105,7 +105,7 @@ def evaluate_test_set(
     )
     # complete the text
     sampled_completions: List[PromptCompletion] = complete_text_with_reward_batched(
-        prompt=first_3_tokens,
+        prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
         target_rewards=normalized_target_rewards,
