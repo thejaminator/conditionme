@@ -113,9 +113,9 @@ Note: if you try to plot a correlation plot between the target reward and the ac
 ## How it works - details
 
 We reserve the first token to encode the target reward. Or rather, the first unmasked token. 
-
-This means that when we pass input ids to the model for training, you need to make sure that you only pass model_max_length - 1 tokens.  
-This library *should* handle the details of this happening.
+This means that when we pass input ids to the model for training, you need to make sure that you only pass model_max_length - 1 tokens.
+We'll also need to offset / modify our attention masks, position_ids, and labels to account for this.  
+This is the value add of the library, we should handle all this for you.
 
 
 NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
@@ -128,7 +128,7 @@ And you'll need to be more careful with how your rewards can get tokenized into 
 - [ ] Reach out to others and ask if the hack makes sense
 - [x] Add support for huggingface pretrained models saving
 - [ ] Add collab notebook for toy example
-- [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is already available](https://huggingface.co/OpenAssistant)
+- [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is somewhat available](https://huggingface.co/OpenAssistant)
 - [ ] Add support for some other pretrained models - not just gpt2
 - [ ] Write docs on how to add support for arbitrary pretrained models that are not added yet.
 - [ ] Settings for prompt vs completion token loss
