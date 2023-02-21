@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 
 import seaborn as sns
 from matplotlib import pyplot as plt
-from seaborn._core.plot import Plot
+
+if TYPE_CHECKING:
+    from seaborn._core.plot import Plot
 
 
 def plot_distribution(

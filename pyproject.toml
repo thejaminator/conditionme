@@ -27,7 +27,7 @@ datasets = {version = "*"}
 slist = {version = "*"}
 typer = {version = "*"}
 pandas = {version = "*"}
-seaborn = {version = "*"}
+seaborn = {version = "^0.12.2"}
 matplotlib = {version = "^3.5.3"}
 scipy = {version = "^1.10.0"}
 
