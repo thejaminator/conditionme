@@ -1,11 +1,11 @@
 ## Introduction
-`conditionme` is library for easily retraining existing language models to work in a decision tranformer / upside down rl fashion.
+`conditionme` is library for easily retraining existing language models to work in a conditional /decision tranformer / upside down rl fashion.
 
 We eventually hope it can be something similar to [trl](https://github.com/lvwerra/trl), just that instead of PPO we'll train in a decision transformer fashion.
 This still a very early stage library, so expect bugs and missing features.
 
 ## Why does this library exist?
-I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a decision tranformer / upside down rl fashion.
+I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a  conditional / decision tranformer / upside down rl fashion.
 Most libraries for decision transformers focus on training in a game / gym environment.
 
 There could be some aspects for training in a decision transformer fashion that could be useful for AI safety. See [Safety considerations for online generative modelling](https://www.lesswrong.com/posts/BMfNu82iunjqKyQA9/safety-considerations-for-online-generative-modeling#Safety_advantages_of_generative_modeling), [Soft optimization makes the value target bigger](https://www.lesswrong.com/posts/9fL22eBJMtyCLvL7j/soft-optimization-makes-the-value-target-bigger#Fine_tuned_generative_models), [RLHF bad, conditioning good](https://www.lesswrong.com/posts/AXpXG9oTiucidnqPK/take-13-rlhf-bad-conditioning-good)
