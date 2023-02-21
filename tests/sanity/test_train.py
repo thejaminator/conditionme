@@ -1,8 +1,8 @@
 from datasets import Dataset, DatasetDict
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
-from conditionme.cond_gpt2_tokenize import create_decision_tokenizer
-from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
+from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import Times1000
 from examples.imdb.train_imdb import train_imdb
 from tests.sanity.test_evaluate_test_set import MockImdbRewardModel

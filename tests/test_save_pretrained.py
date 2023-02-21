@@ -1,7 +1,7 @@
 import torch
 from transformers import GPT2LMHeadModel
 
-from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
 
 
 def test_save_pretrained():

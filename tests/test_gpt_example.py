@@ -11,12 +11,12 @@ from transformers import (
     DataCollatorForLanguageModeling,
 )
 
-from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
 )
-from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
+from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2
 
 
 def test_gpt_sanity():

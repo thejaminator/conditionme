@@ -1,13 +1,9 @@
-import os
-from logging import Logger
 from typing import Optional, Tuple, Union, Callable, List
 
 import torch
-from torch import nn
 from torch.nn import CrossEntropyLoss
 from transformers import (
     GPT2LMHeadModel,
-    GenerationMixin,
     GenerationConfig,
     LogitsProcessorList,
     StoppingCriteriaList,
@@ -15,10 +11,8 @@ from transformers import (
 )
 from transformers.generation.utils import GenerateOutput
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
-from transformers.modeling_utils import ModuleUtilsMixin, PreTrainedModel
-from transformers.utils import PushToHubMixin
+from transformers.modeling_utils import PreTrainedModel
 
-from conditionme.logger import logger
 from conditionme.modify_forward_inputs import (
     NewForwardInputs,
     forward_inputs_with_rewards,

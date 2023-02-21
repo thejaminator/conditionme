@@ -5,8 +5,8 @@ import torch
 from slist import Slist
 from transformers import PreTrainedTokenizerBase, BatchEncoding, GenerationConfig
 
-from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
-from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer
+from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
+from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer
 
 
 @dataclasses.dataclass
