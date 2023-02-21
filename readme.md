@@ -8,10 +8,10 @@ This still a very early stage library, so expect bugs and missing features.
 I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a decision tranformer / upside down rl fashion.
 Most libraries for decision transformers focus on training in a game / gym environment.
 
-There could be some aspects for training in a decision transformer fashion that could be useful for AI safety. See [Safety considerations for online generative modelling](https://www.lesswrong.com/posts/BMfNu82iunjqKyQA9/safety-considerations-for-online-generative-modeling#Safety_advantages_of_generative_modeling), [Soft optimization makes the value target bigger](https://www.lesswrong.com/posts/9fL22eBJMtyCLvL7j/soft-optimization-makes-the-value-target-bigger#Fine_tuned_generative_models), [RLHF bad, conditioning good](https://www.lesswrong.com/posts/AXpXG9oTiucidnqPK/take-13-rlhf-bad-conditioning-good)  
+There could be some aspects for training in a decision transformer fashion that could be useful for AI safety. See [Safety considerations for online generative modelling](https://www.lesswrong.com/posts/BMfNu82iunjqKyQA9/safety-considerations-for-online-generative-modeling#Safety_advantages_of_generative_modeling), [Soft optimization makes the value target bigger](https://www.lesswrong.com/posts/9fL22eBJMtyCLvL7j/soft-optimization-makes-the-value-target-bigger#Fine_tuned_generative_models), [RLHF bad, conditioning good](https://www.lesswrong.com/posts/AXpXG9oTiucidnqPK/take-13-rlhf-bad-conditioning-good)
 
 
-This library helps you by easily by:
+This library helps you investigate decision transformers empirically by:
 1. Providing a compatible tokenizer - what we'll call a DecisionTokenizer. Among other things, it reduces `model_max_length` by 1 so that we can reserve the first token for the reward token.  
 ```python
 from transformers import AutoTokenizer
@@ -31,6 +31,7 @@ decision_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_mod
 
 ## Toy example - Imdb sentiment analysis
 Using gpt-large as our pretrained model, we finetune our model to match our target reward.
+Run it in colab [here](https://colab.research.google.com/drive/1qu1T8zFd3GouaSoG0ABe9kq87nGWCyWJ?usp=sharing)
 View the training script [here](examples/imdb/train_imdb.py).
 
 ```bash
@@ -40,7 +41,7 @@ cd conditionme
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-large --save-dir gpt2_conditional
+export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2 --save-dir gpt2_conditional
 ```
 
 | ![high_reward_dist.png](eval_results%2Flarge_results%2Fhigh_reward_dist.png) | ![low_reward_dist.png](eval_results%2Flarge_results%2Flow_reward_dist.png) |
@@ -146,7 +147,8 @@ And you'll need to be more careful with how your rewards can get tokenized into 
 - [x] Validate that it works on a toy example
 - [ ] Reach out to others and ask if the hack makes sense
 - [x] Add support for huggingface pretrained models saving
-- [ ] Add collab notebook for toy example
+- [x] Add collab notebook for toy example
+- [ ] Add more tests for tokenization and the position/attention/label modifications
 - [ ] Add examples for RLHF tasks - e.g. Openai's summarization where an [existing reward model is somewhat available](https://huggingface.co/OpenAssistant)
 - [ ] Add support for some other pretrained models - not just gpt2
 - [ ] Write docs on how to add support for arbitrary pretrained models that are not added yet.

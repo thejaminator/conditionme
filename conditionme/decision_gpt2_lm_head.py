@@ -21,12 +21,11 @@ from conditionme.modify_forward_inputs import (
 
 class DecisionGPT2LMHeadModel(PreTrainedModel):
     config_class = GPT2Config
+
     def __init__(self, config: GPT2Config):
         super().__init__(config)
         self.pretrained_model: GPT2LMHeadModel = GPT2LMHeadModel(config)
-        self.embed_return = torch.nn.Linear(
-            1, self.pretrained_model.transformer.config.hidden_size
-        )
+        self.embed_return = torch.nn.Linear(1, self.pretrained_model.transformer.config.hidden_size)
 
     @staticmethod
     def from_loaded_pretrained_model(
@@ -56,10 +55,12 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
     def can_generate(self, **kwargs):
         return True
 
+    # This is the same as GPT2LMHeadModel
+    # except for `START OF EDITS` and the mandatory params
     def forward(
         self,
-        target_rewards: torch.Tensor,
-        input_ids: torch.LongTensor,
+        target_rewards: torch.Tensor,  # Edited to be mandatory
+        input_ids: torch.LongTensor,  # Edited to be mandatory
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         token_type_ids: Optional[torch.LongTensor] = None,
@@ -79,11 +80,7 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
             `labels = input_ids` Indices are selected in `[-100, 0, ..., config.vocab_size]` All labels set to `-100`
             are ignored (masked), the loss is only computed for labels in `[0, ..., config.vocab_size]`
         """
-        return_dict = (
-            return_dict
-            if return_dict is not None
-            else self.pretrained_model.config.use_return_dict
-        )
+        return_dict = return_dict if return_dict is not None else self.pretrained_model.config.use_return_dict
         # START OF EDITS
         new_inputs: NewForwardInputs = (
             # If we are using past key values, we have already added the reward embedding to the input
@@ -94,9 +91,7 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
                     [
                         # Attention mask is (batch_size, sequence_length)
                         # add a 1 to the attention mask to account for the reward embedding
-                        torch.ones(
-                            attention_mask.shape[0], 1, device=attention_mask.device
-                        ),
+                        torch.ones(attention_mask.shape[0], 1, device=attention_mask.device),
                         attention_mask,
                     ],
                     dim=1,
@@ -142,9 +137,7 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
         # Set device for model parallelism
         if self.pretrained_model.model_parallel:
             torch.cuda.set_device(self.pretrained_model.transformer.first_device)
-            hidden_states = hidden_states.to(
-                self.pretrained_model.lm_head.weight.device
-            )
+            hidden_states = hidden_states.to(self.pretrained_model.lm_head.weight.device)
 
         lm_logits = self.pretrained_model.lm_head(hidden_states)
 
@@ -155,9 +148,7 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
             shift_labels = labels[..., 1:].contiguous()
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(
-                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
-            )
+            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if not return_dict:
             output = (lm_logits,) + transformer_outputs[1:]
@@ -180,9 +171,7 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
         generation_config: Optional[GenerationConfig] = None,
         logits_processor: Optional[LogitsProcessorList] = None,
         stopping_criteria: Optional[StoppingCriteriaList] = None,
-        prefix_allowed_tokens_fn: Optional[
-            Callable[[int, torch.Tensor], List[int]]
-        ] = None,
+        prefix_allowed_tokens_fn: Optional[Callable[[int, torch.Tensor], List[int]]] = None,
         synced_gpus: Optional[bool] = False,
         **kwargs,
     ) -> Union[GenerateOutput, torch.LongTensor]:
