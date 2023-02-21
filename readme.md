@@ -8,21 +8,26 @@ This still a very early stage library, so expect bugs and missing features.
 
 ## Why does this library exist?
 I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a decision tranformer / upside down rl fashion.
-There could be some aspects for training in a decision transformer fashion that could
+There could be some aspects for training in a decision transformer fashion that could be useful for AI safety.
 
-## How does it work?
-We can't take the [decision transformer implementation](https://huggingface.co/blog/decision-transformers) and just make our existing language model work with the decision transformer architecture. 
-There's a few simplifications that we need to make it work.
-1. Instead of multiple (reward-to-go, state, action) in an rollout/episode, we only have one single reward per episode. 
-2. Rather than having separate state and action heads, we'll continue using the same language model head. 
-So it becomes (reward-to-go, text completion) instead.
-3. We'll just use whatever existing positional encoding from the existing language model.
 
-What we do is:
-1. We reserve the first token to encode the target reward.
-2. The target reward is added all values of the hidden state of the first token. 
-The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output.
-3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
+This library helps you by easily:
+1. Providing a compatible tokenizer - what we'll call a DecisionTokenizer. Among other things, it reduces `model_max_length` by 1 so that we can reserve the first token for the reward token.  
+```python
+from transformers import AutoTokenizer
+from conditionme import create_decision_tokenizer
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+decision_tokenizer = create_decision_tokenizer(tokenizer)
+```
+2. Providing a compatible model. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token. 
+
+```python
+from transformers import GPT2LMHeadModel
+from conditionme import DecisionGPT2LMHeadModel
+
+loaded_model = GPT2LMHeadModel.from_pretrained("gpt2")
+decision_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model)
+```
 
 ## Toy example - Imdb sentiment analysis
 Using gpt-large as our pretrained model, we finetune our model to match our target reward.
@@ -109,6 +114,20 @@ Note: if you try to plot a correlation plot between the target reward and the ac
 </details>
 
 
+
+## How does it work?
+We can't take the [decision transformer implementation](https://huggingface.co/blog/decision-transformers) and just make our existing language model work with the decision transformer architecture. 
+There's a few simplifications that we need to make it work.
+1. Instead of multiple (reward-to-go, state, action) in an rollout/episode, we only have one single reward per episode. 
+2. Rather than having separate state and action heads, we'll continue using the same language model head. 
+So it becomes (reward-to-go, text completion) instead.
+3. We'll just use whatever existing positional encoding from the existing language model.
+
+What we do is:
+1. We reserve the first token to encode the target reward.
+2. The target reward is added all values of the hidden state of the first token. 
+The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output.
+3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
 
 ## How it works - details
 
