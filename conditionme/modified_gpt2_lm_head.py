@@ -140,6 +140,9 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
             return_dict=return_dict,
         )
         labels = new_inputs.labels
+
+        # END OF EDITS
+
         hidden_states = transformer_outputs[0]
 
         # Set device for model parallelism
