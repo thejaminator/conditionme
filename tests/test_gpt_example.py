@@ -16,7 +16,7 @@ from conditionme.rollout.rollout_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
 )
-from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2
+from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer
 
 
 def test_gpt_sanity():
@@ -33,15 +33,15 @@ def test_gpt_sanity():
     tokenizer = AutoTokenizer.from_pretrained(
         "sshleifer/tiny-gpt2", padding_side="left"
     )
-    eos_token: str = tokenizer.eos_token
-    tokenizer.pad_token = tokenizer.eos_token
+    decision_tokenizer = create_decision_tokenizer(tokenizer)
+
 
     # tokenize the dataset
     dataset_tokenized = huggingface_dataset.map(
         lambda examples: batch_tokenize_gpt2(
             text=examples["text"],
             target_rewards=examples["target_reward"],
-            tokenizer=tokenizer,
+            decision_tokenizer=decision_tokenizer,
             add_eos_at_end=True,
         ),
         batched=True,
@@ -78,7 +78,7 @@ def test_gpt_sanity():
         model=model,
         args=training_args,
         train_dataset=dataset_tokenized,
-        data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
+        data_collator=DataCollatorForLanguageModeling(tokenizer=decision_tokenizer, mlm=False),
     )
     trainer.train()
     model.save_pretrained("test_gpt_sanity")

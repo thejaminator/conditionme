@@ -85,7 +85,7 @@ def __complete_text_with_reward_batched_helper(
     encoding = batch_tokenize_gpt2(
         text=prompts_and_targets.map(lambda x: x.prompt),
         target_rewards=prompts_and_targets.map(lambda x: x.target_reward),
-        tokenizer=new_tokenizer,
+        decision_tokenizer=new_tokenizer,
         add_eos_at_end=False,
     )
     encoding.to(device)

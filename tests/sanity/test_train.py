@@ -22,13 +22,13 @@ def test_train():
         ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model=tiny_model)
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
-    decision_toneizer = create_decision_tokenizer(tiny_tokenizer)
+    decision_tokenizer = create_decision_tokenizer(tiny_tokenizer)
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
     train_imdb(
         batch_size=4,
         epochs=1,
         save_dir="saved",
-        decision_tokenizer=tiny_tokenizer,
+        decision_tokenizer=decision_tokenizer,
         gpt2_model=conditional_model,
         reward_model=sentiment_reward_model,
         learning_rate=0.0001,

@@ -73,7 +73,7 @@ def train_imdb(
         lambda x: batch_tokenize_gpt2(
             x["text"],
             target_rewards=x["target_reward"],
-            tokenizer=decision_tokenizer,
+            decision_tokenizer=decision_tokenizer,
             add_eos_at_end=True,
         ),
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller

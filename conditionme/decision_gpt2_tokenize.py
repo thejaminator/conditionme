@@ -31,45 +31,24 @@ def create_decision_tokenizer(
     return DecisionTokenizer(new_tokenizer)
 
 
-def manual_keep_front_truncation(
-    input_ids: List[List[int]],
-    max_length: int,
-) -> List[List[int]]:
-    # Because the transformers package truncates by keeping the last tokens, rather than the first tokens
-    # we need to manually truncate the text
-    # TODO: Check whether this is really true?
-    return [row[:max_length] for row in input_ids]
-
-
 def batch_tokenize_gpt2(
     text: Sequence[str],
     target_rewards: Sequence[float],
-    tokenizer: DecisionTokenizer,
+    decision_tokenizer: DecisionTokenizer,
     add_eos_at_end: bool,
 ) -> BatchEncoding:
-    # shallow copy tokenizer to avoid unexpected side effects
     assert len(text) == len(target_rewards)
-    tokenized_ids = tokenizer(text)["input_ids"]
-    # TODO: Do we still need to do manual truncation?
 
-    # add reward_token to the start of all text, and add eos_token to the end of all text
-    tokenized_ids_with_special_tokens: List[List[int]] = [
-        row + ([tokenizer.eos_token_id] if add_eos_at_end else []) for row in tokenized_ids
-    ]
-    # Manually pad and truncate we want to add the token id ourselves
-    tokenizer_result = tokenizer.pad(
-        {
-            "input_ids": manual_keep_front_truncation(
-                tokenized_ids_with_special_tokens,
-                max_length=tokenizer.model_max_length,
-            )
-        },
-        padding=PaddingStrategy.LONGEST,
-        return_attention_mask=True,
+    tokenizer_result = decision_tokenizer.__call__(
+        text,
+        padding=True,
+        truncation=True,
+        max_length=decision_tokenizer.model_max_length,
+        add_special_tokens=True if add_eos_at_end else False,
     )
 
     # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
-    # add the precomputed reward to the result
+    # add target_reward to the result
     tokenizer_result["target_reward"] = target_rewards
     # convert to tensors
     new_dict = BatchEncoding(tensor_type=TensorType.PYTORCH)
