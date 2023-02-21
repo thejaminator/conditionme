@@ -7,7 +7,7 @@ from transformers import GPT2LMHeadModel, AutoTokenizer
 from conditionme.deicison_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import DoNothingNormalizer
 from examples.imdb.evaluate_imdb import evaluate_test_set
-from examples.imdb.imdb_reward_model import ImdbRewardModel
+from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 
 
 class MockImdbRewardModel(ImdbRewardModel):

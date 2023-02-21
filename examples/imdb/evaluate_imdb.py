@@ -22,7 +22,7 @@ from conditionme.statistics.create_reward_table import (
     reward_evaluation_table,
 )
 from conditionme.statistics.plotting import plot_scatterplot_and_correlation
-from examples.imdb.imdb_reward_model import ImdbRewardModel
+from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 from examples.imdb.reload_dataset import (
     try_load_preprocessed_dataset,
 )

@@ -28,7 +28,7 @@ from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
 from examples.imdb.evaluate_imdb import evaluate_test_set
-from examples.imdb.imdb_reward_model import ImdbRewardModel
+from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 
 
 class GPT2ModelOptions(Enum):

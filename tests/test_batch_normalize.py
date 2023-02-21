@@ -3,7 +3,7 @@ from typing import List
 from datasets import Dataset, DatasetDict
 
 from conditionme.normalization.normalizer import Times1000
-from examples.imdb.imdb_reward_model import ImdbRewardModel
+from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 from examples.imdb.train_imdb import batch_normalize
 
 
