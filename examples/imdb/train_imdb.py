@@ -17,12 +17,10 @@ from transformers import (
     GPT2LMHeadModel,
 )
 
-from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, set_up_decoder_tokenizer
+from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer, DecisionTokenizer
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
 from conditionme.normalization.normalizer import (
     RewardNormalizer,
-    StandardScaleNormalizer,
-    DoNothingNormalizer,
     NormalizerOptions,
     get_normalizer,
 )
@@ -31,10 +29,6 @@ from conditionme.statistics.calculate_distribution import (
 )
 from examples.imdb.evaluate_imdb import evaluate_test_set
 from examples.imdb.imdb_reward_model import ImdbRewardModel
-from examples.imdb.reload_dataset import (
-    preprocessed_dataset_path,
-    try_load_preprocessed_dataset,
-)
 
 
 class GPT2ModelOptions(Enum):
@@ -60,7 +54,7 @@ def train_imdb(
     batch_size: int,
     epochs: int,
     save_dir: str,
-    tokenizer: AutoTokenizer,
+    decision_tokenizer: DecisionTokenizer,
     gpt2_model: ModifiedGPT2LMHeadModel,
     learning_rate: float,
     # must contain "train", "test", and "text" keys
@@ -79,7 +73,7 @@ def train_imdb(
         lambda x: batch_tokenize_gpt2(
             x["text"],
             target_rewards=x["target_reward"],
-            tokenizer=tokenizer,
+            tokenizer=decision_tokenizer,
             add_eos_at_end=True,
         ),
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
@@ -122,14 +116,13 @@ def train_imdb(
         # default transformer package is  5e-5
         learning_rate=learning_rate,
     )
-    conditional_tokenizer = set_up_decoder_tokenizer(tokenizer)
     trainer = Trainer(
         model=gpt2_model,
         args=training_args,
         train_dataset=normalized_dataset["train"],
-        tokenizer=conditional_tokenizer,
+        tokenizer=decision_tokenizer,
         data_collator=DataCollatorForLanguageModeling(
-            tokenizer=conditional_tokenizer, mlm=False
+            tokenizer=decision_tokenizer, mlm=False
         ),
     )
     trainer.train()
@@ -140,7 +133,7 @@ def train_imdb(
     evaluate_test_set(
         test_text=test_text,
         model=gpt2_model,
-        tokenizer=tokenizer,
+        decision_tokenizer=decision_tokenizer,
         sentiment_reward=reward_model,
         limit=1000,
         normalizer=normalizer,
@@ -177,6 +170,7 @@ def main(
     )
     sentiment_reward = ImdbRewardModel(device=device_selected)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
+    decision_tokenizer = create_decision_tokenizer(tokenizer)
     loaded_model = GPT2LMHeadModel.from_pretrained(model.value)
     gpt2_model = ModifiedGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(
         device
@@ -185,7 +179,7 @@ def main(
         batch_size=batch_size,
         epochs=epochs,
         save_dir=save_dir,
-        tokenizer=tokenizer,
+        decision_tokenizer=decision_tokenizer,
         gpt2_model=gpt2_model,
         learning_rate=learning_rate,
         dataset=imdb_dataset,

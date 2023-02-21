@@ -37,7 +37,7 @@ def test_evaluate_test_set():
     evaluate_test_set(
         test_text=test_text,
         model=conditional_model,
-        tokenizer=tiny_tokenizer,
+        decision_tokenizer=tiny_tokenizer,
         sentiment_reward=sentiment_reward_model,
         normalizer=normalizer,
         limit=10,

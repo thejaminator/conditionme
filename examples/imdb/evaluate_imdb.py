@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import typer
 from datasets import Dataset, load_dataset
-from transformers import GPT2LMHeadModel, AutoTokenizer
+from transformers import AutoTokenizer
 
 from conditionme.cond_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.modified_gpt2_lm_head import ModifiedGPT2LMHeadModel
@@ -31,7 +31,7 @@ from examples.imdb.reload_dataset import (
 def evaluate_test_set(
     test_text: List[str],
     model: ModifiedGPT2LMHeadModel,
-    tokenizer: AutoTokenizer,
+    decision_tokenizer: AutoTokenizer,
     sentiment_reward: ImdbRewardModel,
     normalizer: RewardNormalizer,
     limit: int,
@@ -50,14 +50,14 @@ def evaluate_test_set(
     high_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
-        tokenizer=tokenizer,
+        tokenizer=decision_tokenizer,
         target_reward=normalizer.normalize_rewards(high_target_rewards),
     )
     low_target_rewards = [0.0] * len(first_3_tokens)
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
-        tokenizer=tokenizer,
+        tokenizer=decision_tokenizer,
         target_reward=normalizer.normalize_rewards(low_target_rewards),
     )
 
@@ -107,7 +107,7 @@ def evaluate_test_set(
     sampled_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
-        tokenizer=tokenizer,
+        tokenizer=decision_tokenizer,
         target_reward=normalized_target_rewards,
     )
     # Use the reward model to compute the actual reward of the completions
@@ -174,7 +174,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     evaluate_test_set(
         test_text=test_text,
         model=model,
-        tokenizer=tokenizer,
+        decision_tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
         limit=limit,
         normalizer=normalizer,

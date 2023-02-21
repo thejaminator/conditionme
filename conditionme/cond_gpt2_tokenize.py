@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Sequence, List
+from typing import Sequence, List, NewType
 
 import torch
 from transformers import (
@@ -9,10 +9,13 @@ from transformers import (
 )
 from transformers.utils import PaddingStrategy
 
+# This is a new type - it isn't enforced at runtime, but it is enforced at type-checking time
+DecisionTokenizer = NewType("DecisionTokenizer", PreTrainedTokenizerBase)  # type: ignore [valid-newtype]
 
-def set_up_decoder_tokenizer(
+
+def create_decision_tokenizer(
     tokenizer: PreTrainedTokenizerBase,
-) -> PreTrainedTokenizerBase:
+) -> DecisionTokenizer:
     # shallow copy tokenizer to avoid unexpected side effects
     new_tokenizer: PreTrainedTokenizerBase = copy(tokenizer)
     # minus one to the sequence length to account for the reward token
@@ -25,7 +28,7 @@ def set_up_decoder_tokenizer(
     new_tokenizer.padding_side = "left"
     # we also need to truncate from the left
     new_tokenizer.truncation_side = "left"
-    return new_tokenizer
+    return DecisionTokenizer(new_tokenizer)
 
 
 def manual_keep_front_truncation(
@@ -41,26 +44,24 @@ def manual_keep_front_truncation(
 def batch_tokenize_gpt2(
     text: Sequence[str],
     target_rewards: Sequence[float],
-    tokenizer: PreTrainedTokenizerBase,
+    tokenizer: DecisionTokenizer,
     add_eos_at_end: bool,
 ) -> BatchEncoding:
     # shallow copy tokenizer to avoid unexpected side effects
-    new_tokenizer: PreTrainedTokenizerBase = set_up_decoder_tokenizer(tokenizer)
     assert len(text) == len(target_rewards)
-    tokenized_ids = new_tokenizer(text)["input_ids"]
+    tokenized_ids = tokenizer(text)["input_ids"]
     # TODO: Do we still need to do manual truncation?
 
     # add reward_token to the start of all text, and add eos_token to the end of all text
     tokenized_ids_with_special_tokens: List[List[int]] = [
-        row + ([new_tokenizer.eos_token_id] if add_eos_at_end else [])
-        for row in tokenized_ids
+        row + ([tokenizer.eos_token_id] if add_eos_at_end else []) for row in tokenized_ids
     ]
     # Manually pad and truncate we want to add the token id ourselves
-    tokenizer_result = new_tokenizer.pad(
+    tokenizer_result = tokenizer.pad(
         {
             "input_ids": manual_keep_front_truncation(
                 tokenized_ids_with_special_tokens,
-                max_length=new_tokenizer.model_max_length,
+                max_length=tokenizer.model_max_length,
             )
         },
         padding=PaddingStrategy.LONGEST,
