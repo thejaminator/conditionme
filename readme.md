@@ -4,14 +4,14 @@
 We eventually hope it can be something similar to [trl](https://github.com/lvwerra/trl), just that instead of PPO we'll train in a decision transformer fashion.
 This still a very early stage library, so expect bugs and missing features.
 
-
-
 ## Why does this library exist?
 I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a decision tranformer / upside down rl fashion.
-There could be some aspects for training in a decision transformer fashion that could be useful for AI safety.
+Most libraries for decision transformers focus on training in a game / gym environment.
+
+There could be some aspects for training in a decision transformer fashion that could be useful for AI safety. See [Safety considerations for online generative modelling](https://www.lesswrong.com/posts/BMfNu82iunjqKyQA9/safety-considerations-for-online-generative-modeling#Safety_advantages_of_generative_modeling), [Soft optimization makes the value target bigger](https://www.lesswrong.com/posts/9fL22eBJMtyCLvL7j/soft-optimization-makes-the-value-target-bigger#Fine_tuned_generative_models), [RLHF bad, conditioning good](https://www.lesswrong.com/posts/AXpXG9oTiucidnqPK/take-13-rlhf-bad-conditioning-good)  
 
 
-This library helps you by easily:
+This library helps you by easily by:
 1. Providing a compatible tokenizer - what we'll call a DecisionTokenizer. Among other things, it reduces `model_max_length` by 1 so that we can reserve the first token for the reward token.  
 ```python
 from transformers import AutoTokenizer
