@@ -44,9 +44,9 @@ def batch_normalize(
     normalizer: RewardNormalizer,
 ) -> BatchEncoding:
     # normalize the reward
-    normalized_reward = normalizer.normalize_rewards(batch["target_reward"])
+    normalized_reward = normalizer.normalize_rewards(batch["target_rewards"])
     # replace the reward with the normalized reward
-    batch["target_reward"] = normalized_reward
+    batch["target_rewards"] = normalized_reward
     return batch
 
 
@@ -66,13 +66,13 @@ def train_imdb(
     dataset_tokenized: Dataset = dataset.map(  # type: ignore
         # batched
         lambda examples: {
-            "target_reward": reward_model.reward_batch(examples["text"], batch_size=32)
+            "target_rewards": reward_model.reward_batch(examples["text"], batch_size=32)
         },
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
             x["text"],
-            target_rewards=x["target_reward"],
+            target_rewards=x["target_rewards"],
             decision_tokenizer=decision_tokenizer,
             add_eos_at_end=True,
         ),
@@ -80,7 +80,7 @@ def train_imdb(
         batched=True,
     )
     normalizer: RewardNormalizer = normalizer_type.from_rewards(
-        rewards=dataset_tokenized["train"]["target_reward"]  # type: ignore
+        rewards=dataset_tokenized["train"]["target_rewards"]  # type: ignore
     )
     # update the dataset with the normalized rewards
     normalized_dataset = dataset_tokenized.map(
@@ -90,16 +90,16 @@ def train_imdb(
     # Save the normalizer
     normalizer.save_normalizer(Path(save_dir))
 
-    # log training target_reward
+    # log training target_rewards
     training_reward_dist = calculate_distribution_statistics(
-        dist=normalized_dataset["train"]["target_reward"]  # type: ignore
+        dist=normalized_dataset["train"]["target_rewards"]  # type: ignore
     )
-    print(f"Training target_reward distribution: {training_reward_dist}")
+    print(f"Training target_rewards distribution: {training_reward_dist}")
     normalized_dataset.set_format(
         type="torch",
         columns=[
             "input_ids",
-            "target_reward",
+            "target_rewards",
             "attention_mask",
         ],
     )

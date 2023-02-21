@@ -47,9 +47,9 @@ def batch_tokenize_gpt2(
         add_special_tokens=True if add_eos_at_end else False,
     )
 
-    # BatchEncoding will have "input_ids", "attention_mask, "target_reward", "labels"
-    # add target_reward to the result
-    tokenizer_result["target_reward"] = target_rewards
+    # BatchEncoding will have "input_ids", "attention_mask, "target_rewards", "labels"
+    # add target_rewards to the result
+    tokenizer_result["target_rewards"] = target_rewards
     # convert to tensors
     new_dict = BatchEncoding(tensor_type=TensorType.PYTORCH)
     for key in tokenizer_result:

@@ -44,7 +44,7 @@ def complete_text_with_reward(
 
 def complete_text_with_reward_batched(
     prompt: List[str],
-    target_reward: List[float],
+    target_rewards: List[float],
     tokenizer: PreTrainedTokenizerBase,
     model: ModifiedGPT2LMHeadModel,
     temperature: float = 1.0,
@@ -53,7 +53,7 @@ def complete_text_with_reward_batched(
 ) -> List[PromptCompletion]:
     prompts_rewards: Slist[PromptWithTargetReward] = (
         Slist(prompt)
-        .zip(target_reward)
+        .zip(target_rewards)
         .map(lambda p: PromptWithTargetReward(prompt=p[0], target_reward=p[1]))
     )
     grouped = prompts_rewards.grouped(batch_size)
@@ -95,7 +95,7 @@ def __complete_text_with_reward_batched_helper(
         input_ids=input_ids,
         attention_mask=attention_mask,
         # convert to tensor
-        target_reward=torch.tensor(
+        target_rewards=torch.tensor(
             prompts_and_targets.map(lambda x: x.target_reward)
         ).to(device),
         return_dict_in_generate=True,

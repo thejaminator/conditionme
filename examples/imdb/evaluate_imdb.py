@@ -51,14 +51,14 @@ def evaluate_test_set(
         prompt=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_reward=normalizer.normalize_rewards(high_target_rewards),
+        target_rewards=normalizer.normalize_rewards(high_target_rewards),
     )
     low_target_rewards = [0.0] * len(first_3_tokens)
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompt=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_reward=normalizer.normalize_rewards(low_target_rewards),
+        target_rewards=normalizer.normalize_rewards(low_target_rewards),
     )
 
     # Use the reward model to compute the actual reward of the completions
@@ -71,7 +71,7 @@ def evaluate_test_set(
     print(sum(high_target_actual_reward))
     print(sum(low_target_actual_reward))
     # print the stats
-    # log training target_reward
+    # log training target_rewards
     high_reward_dist = calculate_distribution_statistics(dist=high_target_actual_reward)
     low_reward_dist = calculate_distribution_statistics(dist=low_target_actual_reward)
     print(f"High reward distribution: {high_reward_dist}")
@@ -108,7 +108,7 @@ def evaluate_test_set(
         prompt=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_reward=normalized_target_rewards,
+        target_rewards=normalized_target_rewards,
     )
     # Use the reward model to compute the actual reward of the completions
     sampled_actual_rewards: List[float] = sentiment_reward.reward_batch(
@@ -153,7 +153,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     ).map(
         # batched
         lambda examples: {
-            "target_reward": sentiment_reward.reward_batch(
+            "target_rewards": sentiment_reward.reward_batch(
                 examples["text"], batch_size=32
             )
         },
@@ -161,14 +161,14 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
     ).map(
         lambda x: batch_tokenize_gpt2(
             text=x["text"],
-            target_rewards=x["target_reward"],
+            target_rewards=x["target_rewards"],
             decision_tokenizer=tokenizer,
             add_eos_at_end=True,
         ),
         batched=True,
     )
     dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_reward", "attention_mask"]
+        type="torch", columns=["input_ids", "target_rewards", "attention_mask"]
     )
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(

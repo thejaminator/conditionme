@@ -16,7 +16,7 @@ class NewForwardInputs:
 def forward_inputs_with_rewards(
     reward_embedding: torch.nn.Linear,
     wte_embedding: torch.nn.Embedding,
-    target_reward: torch.Tensor,
+    target_rewards: torch.Tensor,
     input_ids: torch.LongTensor,
     attention_mask: Optional[torch.Tensor],
     position_ids: Optional[torch.Tensor],
@@ -25,9 +25,9 @@ def forward_inputs_with_rewards(
     # transform token inputs to embedding inputs
     inputs_embeds = wte_embedding(input_ids)
     # target reward is a 1d tensor of shape (batch_size,) so we need to unsqueeze it to get a 2d tensor
-    target_reward_reshaped = target_reward.unsqueeze(1)
+    target_rewards_reshaped = target_rewards.unsqueeze(1)
     # get the reward embedding
-    reward_embeds = reward_embedding(target_reward_reshaped)
+    reward_embeds = reward_embedding(target_rewards_reshaped)
     # reward embeds is of shape (batch_size, hidden_size), inputs_embeds is of shape (batch_size, sequence_length, hidden_size)
     # we want to concat the reward embeds to the inputs embeds so that the tensor is of shape (batch_size, sequence_length + 1, hidden_size
     # need to unsqueeze the reward embeds to get it to the right shape
@@ -38,7 +38,7 @@ def forward_inputs_with_rewards(
         torch.cat( # type: ignore [assignment]
             [
                 # -100 means that the reward embedding is masked. dtype long
-                -100 * torch.ones_like(target_reward).unsqueeze(1).long(),
+                -100 * torch.ones_like(target_rewards).unsqueeze(1).long(),
                 labels,
             ],
             dim=1,
@@ -52,7 +52,7 @@ def forward_inputs_with_rewards(
         torch.cat(
             [
                 # one means that the reward embedding is not masked
-                torch.ones_like(target_reward).unsqueeze(1),
+                torch.ones_like(target_rewards).unsqueeze(1),
                 attention_mask,
             ],
             dim=1,
@@ -77,7 +77,7 @@ def forward_inputs_with_rewards(
         torch.cat(
             [
                 # 0 means that the reward embedding is at position 0
-                torch.zeros_like(target_reward).unsqueeze(1).long(),
+                torch.zeros_like(target_rewards).unsqueeze(1).long(),
                 offsetted_position_ids,
             ],
             dim=1,

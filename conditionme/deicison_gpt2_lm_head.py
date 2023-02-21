@@ -42,14 +42,14 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
     def prepare_inputs_for_generation(
         self,
         input_ids,
-        target_reward: torch.Tensor,
+        target_rewards: torch.Tensor,
         past_key_values=None,
         **kwargs,
     ):
         final_kwargs = self.pretrained_model.prepare_inputs_for_generation(
             input_ids=input_ids, past_key_values=past_key_values, **kwargs
         )
-        final_kwargs["target_reward"] = target_reward
+        final_kwargs["target_rewards"] = target_rewards
         return final_kwargs
 
     # For GenerationMixin
@@ -58,7 +58,7 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
 
     def forward(
         self,
-        target_reward: torch.Tensor,
+        target_rewards: torch.Tensor,
         input_ids: torch.LongTensor,
         past_key_values: Optional[Tuple[Tuple[torch.Tensor]]] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
@@ -111,7 +111,7 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
             else forward_inputs_with_rewards(
                 reward_embedding=self.embed_return,
                 wte_embedding=self.pretrained_model.transformer.wte,
-                target_reward=target_reward,
+                target_rewards=target_rewards,
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 position_ids=position_ids,
@@ -175,7 +175,7 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
     # this breaks liskov, but it is the only way to work with to maintain compat with GenerationMixin
     def generate(
         self,
-        target_reward: torch.Tensor,
+        target_rewards: torch.Tensor,
         inputs: Optional[torch.Tensor] = None,
         generation_config: Optional[GenerationConfig] = None,
         logits_processor: Optional[LogitsProcessorList] = None,
@@ -187,7 +187,7 @@ class ModifiedGPT2LMHeadModel(PreTrainedModel):
         **kwargs,
     ) -> Union[GenerateOutput, torch.LongTensor]:
         return super().generate(
-            target_reward=target_reward,
+            target_rewards=target_rewards,
             inputs=inputs,
             generation_config=generation_config,
             logits_processor=logits_processor,

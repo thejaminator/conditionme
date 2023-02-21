@@ -31,7 +31,7 @@ def test_batch_normalize():
     dataset_rewarded: Dataset = dataset_hg.map(  # type: ignore
         # batched
         lambda examples: {
-            "target_reward": reward_model.reward_batch(examples["text"], batch_size=32)
+            "target_rewards": reward_model.reward_batch(examples["text"], batch_size=32)
         },
         batched=True,
     )
@@ -39,4 +39,4 @@ def test_batch_normalize():
     dataset_normalized = dataset_rewarded.map(
         lambda x: batch_normalize(x, normalizer=normalizer), batched=True
     )
-    assert dataset_normalized["train"]["target_reward"][0] == 1000  # type: ignore
+    assert dataset_normalized["train"]["target_rewards"][0] == 1000  # type: ignore

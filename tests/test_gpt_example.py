@@ -27,7 +27,7 @@ def test_gpt_sanity():
             "This is another test",
             "This is a third test" * 1000,
         ],
-        "target_reward": [0.1, 0.2, 0.3],
+        "target_rewards": [0.1, 0.2, 0.3],
     }
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
     tokenizer = AutoTokenizer.from_pretrained(
@@ -40,7 +40,7 @@ def test_gpt_sanity():
     dataset_tokenized = huggingface_dataset.map(
         lambda examples: batch_tokenize_gpt2(
             text=examples["text"],
-            target_rewards=examples["target_reward"],
+            target_rewards=examples["target_rewards"],
             decision_tokenizer=decision_tokenizer,
             add_eos_at_end=True,
         ),
@@ -51,7 +51,7 @@ def test_gpt_sanity():
         type="torch",
         columns=[
             "input_ids",
-            "target_reward",
+            "target_rewards",
             "attention_mask",
         ],
     )
@@ -93,7 +93,7 @@ def test_complete_text_with_reward_batched():
             "This is another test",
             "This is thirdthirdthirdthird test test test",
         ],
-        "target_reward": [0.1, 0.2, 0.3],
+        "target_rewards": [0.1, 0.2, 0.3],
     }
     device: torch.device = torch.device("cpu")
     # Train the model using the device
@@ -119,7 +119,7 @@ def test_complete_text_with_reward_batched():
         prompt=first_3_tokens,
         model=model,
         tokenizer=tokenizer,
-        target_reward=[1.0] * len(first_3_tokens),
+        target_rewards=[1.0] * len(first_3_tokens),
         max_new_tokens=1,
     )
     assert len(completions) == len(test_text_tokenized)
