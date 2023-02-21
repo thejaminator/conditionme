@@ -29,7 +29,7 @@ def test_train():
         epochs=1,
         save_dir="sanity/saved",
         decision_tokenizer=decision_tokenizer,
-        gpt2_model=conditional_model,
+        decision_model=conditional_model,
         reward_model=sentiment_reward_model,
         learning_rate=0.0001,
         dataset=dataset_hg,

@@ -55,7 +55,7 @@ def train_imdb(
     epochs: int,
     save_dir: str,
     decision_tokenizer: DecisionTokenizer,
-    gpt2_model: DecisionGPT2LMHeadModel,
+    decision_model: DecisionGPT2LMHeadModel,
     learning_rate: float,
     # must contain "train", "test", and "text" keys
     dataset: Union[DatasetDict, Dataset],
@@ -117,7 +117,7 @@ def train_imdb(
         learning_rate=learning_rate,
     )
     trainer = Trainer(
-        model=gpt2_model,
+        model=decision_model,
         args=training_args,
         train_dataset=normalized_dataset["train"],
         tokenizer=decision_tokenizer,
@@ -128,11 +128,11 @@ def train_imdb(
     trainer.train()
 
     # Save the model
-    gpt2_model.save_pretrained(save_dir)
+    decision_model.save_pretrained(save_dir)
     test_text: List[str] = normalized_dataset["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
-        model=gpt2_model,
+        model=decision_model,
         decision_tokenizer=decision_tokenizer,
         sentiment_reward=reward_model,
         limit=1000,
@@ -180,7 +180,7 @@ def main(
         epochs=epochs,
         save_dir=save_dir,
         decision_tokenizer=decision_tokenizer,
-        gpt2_model=gpt2_model,
+        decision_model=gpt2_model,
         learning_rate=learning_rate,
         dataset=imdb_dataset,
         reward_model=sentiment_reward,
