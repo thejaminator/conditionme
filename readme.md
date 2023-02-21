@@ -138,8 +138,11 @@ We'll also need to offset / modify our attention masks, position_ids, and labels
 This is the value add of the library, we should handle all this for you.
 
 
-NOTE: Another way of doing this is to literally encode the reward as text input. A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
+NOTE: Another way of doing this is to literally encode the reward as text input.
+
+A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
 And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.
+You'll also won't have a linear layer on top of that reward's token's hidden state, which the decision transformer does add. (It also seemed to help in my experiments
 
 
 
