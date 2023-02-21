@@ -105,6 +105,7 @@ def test_complete_text_with_reward_batched():
     )
     huggingface_dataset: Dataset = Dataset.from_dict(dataset)
     tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
+    decision_tokenizer = create_decision_tokenizer(tokenizer)
     # Take 500 test set
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
@@ -118,7 +119,7 @@ def test_complete_text_with_reward_batched():
     completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompts=first_3_tokens,
         model=model,
-        tokenizer=tokenizer,
+        tokenizer=decision_tokenizer,
         target_rewards=[1.0] * len(first_3_tokens),
         max_new_tokens=1,
     )

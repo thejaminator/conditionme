@@ -45,7 +45,7 @@ def complete_text_with_reward(
 def complete_text_with_reward_batched(
     prompts: List[str],
     target_rewards: List[float],
-    tokenizer: PreTrainedTokenizerBase,
+    tokenizer: DecisionTokenizer,
     model: DecisionGPT2LMHeadModel,
     temperature: float = 1.0,
     batch_size: int = 4,
