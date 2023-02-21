@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Sequence, List, NewType
+from typing import Sequence, NewType
 
 import torch
 from transformers import (
@@ -7,7 +7,6 @@ from transformers import (
     BatchEncoding,
     TensorType,
 )
-from transformers.utils import PaddingStrategy
 
 # This is a new type - it isn't enforced at runtime, but it is enforced at type-checking time
 DecisionTokenizer = NewType("DecisionTokenizer", PreTrainedTokenizerBase)  # type: ignore [valid-newtype]
@@ -28,7 +27,14 @@ def create_decision_tokenizer(
     new_tokenizer.padding_side = "left"
     # we also need to truncate from the left
     new_tokenizer.truncation_side = "left"
+    new_tokenizer.__is_decision_tokenizer = True
     return DecisionTokenizer(new_tokenizer)
+
+
+def assert_is_decision_tokenizer(tokenizer: PreTrainedTokenizerBase) -> None:
+    is_decision_tokenizer = getattr(tokenizer, "__is_decision_tokenizer", False)
+    if not is_decision_tokenizer:
+        raise ValueError("tokenizer is not a DecisionTokenizer. Create one with create_decision_tokenizer(tokenizer)")
 
 
 def batch_tokenize_gpt2(
@@ -38,6 +44,7 @@ def batch_tokenize_gpt2(
     add_eos_at_end: bool,
 ) -> BatchEncoding:
     assert len(text) == len(target_rewards)
+    assert_is_decision_tokenizer(decision_tokenizer)
 
     tokenizer_result = decision_tokenizer.__call__(
         text,

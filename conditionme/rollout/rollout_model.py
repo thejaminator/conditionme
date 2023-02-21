@@ -6,7 +6,7 @@ from slist import Slist
 from transformers import PreTrainedTokenizerBase, GenerationConfig
 
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
-from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, DecisionTokenizer
+from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, DecisionTokenizer, assert_is_decision_tokenizer
 
 
 @dataclasses.dataclass
@@ -78,7 +78,7 @@ def __complete_text_with_reward_batched_helper(
     temperature: float,
     max_new_tokens: int,
 ) -> Slist[PromptCompletion]:
-    # shallow copy the tokenizer to avoid unexpected side effects
+    assert_is_decision_tokenizer(tokenizer)
     device: torch.device = model.device  # type: ignore
     # for each prompt, add the bos token which will be the reward token
     encoding = batch_tokenize_gpt2(

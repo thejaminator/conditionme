@@ -4,7 +4,7 @@ from typing import List
 
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
-from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
+from conditionme import DecisionGPT2LMHeadModel
 from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
 from conditionme.normalization.normalizer import DoNothingNormalizer
 from examples.imdb.evaluate_imdb import evaluate_test_set
@@ -32,14 +32,14 @@ def test_evaluate_test_set():
         loaded_model=tiny_model
     )
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
-    tokenizer = create_decision_tokenizer(tiny_tokenizer)
+    decision_tokenizer = create_decision_tokenizer(tiny_tokenizer)
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
     normalizer = DoNothingNormalizer()
     save_dir = Path("tests/")
     evaluate_test_set(
         test_text=test_text,
         model=conditional_model,
-        decision_tokenizer=tiny_tokenizer,
+        decision_tokenizer=decision_tokenizer,
         sentiment_reward=sentiment_reward_model,
         normalizer=normalizer,
         limit=10,
