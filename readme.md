@@ -138,7 +138,6 @@ This is the value add of the library, we should handle all this for you.
 As an alternative to this library, you can literally encode the reward as text input.
 
 Instead of using scalar rewards, you can have discrete rewards, and [encode them as tokens](https://arxiv.org/abs/2302.08582).
-The downside is that you have some loss of information since the reward is discrete.
 
 You also can try and encode the reward literally as text that contains the numbers of the reward.
 [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
