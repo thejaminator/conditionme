@@ -126,24 +126,22 @@ So it becomes (reward-to-go, text completion) instead.
 
 What we do is:
 1. We reserve the first token to encode the target reward.
-2. The target reward is added all values of the hidden state of the first token. 
-The positional encoding still remains in the hidden state, so that the model can learn to condition on the reward token to affect the output.
+2. We learn a linear layer to map a scalar reward to a vector of the same size as the hidden state of the first token. This is a the same thing that happens in the decision transformer implementation.
+3. We'll offset / modify our attention masks, position_ids, and labels to account for this.
 3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
 
-## How it works - details
-
-We reserve the first token to encode the target reward. Or rather, the first unmasked token. 
-This means that when we pass input ids to the model for training, you need to make sure that you only pass model_max_length - 1 tokens.
-We'll also need to offset / modify our attention masks, position_ids, and labels to account for this.  
 This is the value add of the library, we should handle all this for you.
 
+## Alternative means of conditioning RL
+As an alternative to this library, you can literally encode the reward as text input.
 
-NOTE: Another way of doing this is to literally encode the reward as text input.
+Instead of using scalar rewards, you can have discrete rewards, and [encode them as tokens](https://arxiv.org/abs/2302.08582).
+The downside is that you have some loss of information since the reward is discrete.
 
-A downside of this is that you'll probably be more open to prompt injection. [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
-And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.
-You'll also won't have a linear layer on top of that reward's token's hidden state, which the decision transformer does add. (It also seemed to help in my experiments
-
+You also can try and encode the reward literally as text that contains the numbers of the reward.
+[I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
+A downside of this is that you'll probably be more open to prompt injection.  And you'll need to be more careful with how your rewards can get tokenized into multiple different tokens.
+You'll also won't have a linear layer on top of that reward's token's hidden state, which the decision transformer does add.
 
 
 ## TODO list
