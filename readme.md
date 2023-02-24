@@ -6,6 +6,8 @@ This still a very early stage library, so expect bugs and missing features.
 
 ## Why does this library exist?
 I haven't found a library that allows you to easily retrain existing language models (e.g. gpt2, gpt-j) to work in a  conditional / decision tranformer / upside down rl fashion.
+This library helps your easily specify a scalar target reward when training your model in this fashion. 
+
 Most libraries for decision transformers focus on training in a game / gym environment.
 
 There could be some aspects for training in a decision transformer fashion that could be useful for AI safety. See [Safety considerations for online generative modelling](https://www.lesswrong.com/posts/BMfNu82iunjqKyQA9/safety-considerations-for-online-generative-modeling#Safety_advantages_of_generative_modeling), [Soft optimization makes the value target bigger](https://www.lesswrong.com/posts/9fL22eBJMtyCLvL7j/soft-optimization-makes-the-value-target-bigger#Fine_tuned_generative_models), [RLHF bad, conditioning good](https://www.lesswrong.com/posts/AXpXG9oTiucidnqPK/take-13-rlhf-bad-conditioning-good)
@@ -19,7 +21,7 @@ from conditionme import create_decision_tokenizer
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
 decision_tokenizer = create_decision_tokenizer(tokenizer)
 ```
-2. Providing a compatible model. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token. 
+2. Providing a compatible model that takes into your scalar `target_rewards`. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token. 
 
 ```python
 from transformers import GPT2LMHeadModel
@@ -125,8 +127,8 @@ So it becomes (reward-to-go, text completion) instead.
 3. We'll just use whatever existing positional encoding from the existing language model.
 
 What we do is:
-1. We reserve the first token to encode the target reward.
-2. We learn a linear layer to map a scalar reward to a vector of the same size as the hidden state of the first token. This is a the same thing that happens in the decision transformer implementation.
+1. We reserve the first token to encode the scalar target reward.
+2. We learn a linear layer to map the scalar reward to a vector of the same size as the hidden state of the first token. This is a the same thing that happens in the decision transformer implementation.
 3. We'll offset / modify our attention masks, position_ids, and labels to account for this.
 3. We finetune our model autoregressively, just that we'll specify the target reward along with our inputs.
 
