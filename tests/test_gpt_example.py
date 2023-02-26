@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 import torch
@@ -19,7 +20,7 @@ from conditionme.rollout.rollout_model import (
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer
 
 
-def test_gpt_sanity():
+def test_gpt_sanity(tmp_path: Path):
     # create fake dataset for huggingface dataset
     dataset = {
         "text": [
@@ -66,7 +67,7 @@ def test_gpt_sanity():
 
     # Optionally save to drive
     training_args = TrainingArguments(
-        output_dir="test_gpt_sanity",
+        output_dir=tmp_path,
         overwrite_output_dir=True,
         num_train_epochs=1,
         per_device_train_batch_size=16,
@@ -81,8 +82,8 @@ def test_gpt_sanity():
         data_collator=DataCollatorForLanguageModeling(tokenizer=decision_tokenizer, mlm=False),
     )
     trainer.train()
-    model.save_pretrained("test_gpt_sanity")
-    new_model = DecisionGPT2LMHeadModel.from_pretrained("test_gpt_sanity")
+    model.save_pretrained(tmp_path)
+    new_model = DecisionGPT2LMHeadModel.from_pretrained(tmp_path)
 
 
 def test_complete_text_with_reward_batched():

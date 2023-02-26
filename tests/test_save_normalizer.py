@@ -10,18 +10,16 @@ from conditionme.normalization.normalizer import (
 )
 
 
-def test_save_normalizer():
-    path = Path("test_normalizer")
-    DoNothingNormalizer().save_normalizer(path)
-    normalizer = RewardNormalizer.load_normalizer(path)
+def test_save_normalizer(tmp_path: Path):
+    DoNothingNormalizer().save_normalizer(tmp_path)
+    normalizer = RewardNormalizer.load_normalizer(tmp_path)
     assert isinstance(normalizer, DoNothingNormalizer)
 
 
-def test_save_standard_normalizer():
-    path = Path("test_normalizer")
+def test_save_standard_normalizer(tmp_path: Path):
     prev_normalizer = StandardScaleNormalizer(mean=1, std=1)
-    prev_normalizer.save_normalizer(path)
-    normalizer = RewardNormalizer.load_normalizer(path)
+    prev_normalizer.save_normalizer(tmp_path)
+    normalizer = RewardNormalizer.load_normalizer(tmp_path)
     assert isinstance(normalizer, StandardScaleNormalizer)
     assert normalizer.mean == prev_normalizer.mean
     assert normalizer.std == prev_normalizer.std

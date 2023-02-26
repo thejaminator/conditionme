@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from datasets import Dataset, DatasetDict
 from transformers import GPT2LMHeadModel, AutoTokenizer
 
@@ -8,7 +10,7 @@ from examples.imdb.train_imdb import train_imdb
 from tests.test_evaluate_test_set import MockImdbRewardModel
 
 
-def test_train():
+def test_train(tmp_path: Path):
     # Contains train, test set.
     dataset = {
         "train": Dataset.from_dict(
@@ -27,7 +29,7 @@ def test_train():
     train_imdb(
         batch_size=4,
         epochs=1,
-        save_dir="sanity/saved",
+        save_dir=tmp_path,
         decision_tokenizer=decision_tokenizer,
         decision_model=conditional_model,
         reward_model=sentiment_reward_model,

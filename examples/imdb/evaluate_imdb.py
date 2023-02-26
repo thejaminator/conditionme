@@ -36,7 +36,7 @@ def evaluate_test_set(
     normalizer: RewardNormalizer,
     limit: int,
     save_dir: Path,
-):
+) -> None:
     # convert into a list of space separated tokens
     test_text_tokenized: List[List[str]] = [
         text.split(" ") for text in test_text[:limit]

@@ -25,7 +25,7 @@ class MockImdbRewardModel(ImdbRewardModel):
         return [self.reward_single(text) for text in texts]
 
 
-def test_evaluate_test_set():
+def test_evaluate_test_set(tmp_path: Path):
     test_text = ["this", "this is another test test test"]
     tiny_model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained("sshleifer/tiny-gpt2")
     conditional_model: DecisionGPT2LMHeadModel = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(
@@ -35,7 +35,7 @@ def test_evaluate_test_set():
     decision_tokenizer = create_decision_tokenizer(tiny_tokenizer)
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
     normalizer = DoNothingNormalizer()
-    save_dir = Path("tests/")
+    save_dir = Path(tmp_path)
     evaluate_test_set(
         test_text=test_text,
         model=conditional_model,
