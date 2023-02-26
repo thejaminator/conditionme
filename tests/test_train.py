@@ -5,7 +5,7 @@ from transformers import GPT2LMHeadModel, AutoTokenizer
 
 from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
-from conditionme.normalization.normalizer import Times1000
+from conditionme.scaling.scaler import Times1000
 from examples.imdb.train_imdb import train_imdb
 from tests.test_evaluate_test_set import MockImdbRewardModel
 
@@ -35,5 +35,5 @@ def test_train(tmp_path: Path):
         reward_model=sentiment_reward_model,
         learning_rate=0.0001,
         dataset=dataset_hg,
-        normalizer_type=Times1000,
+        scaler_type=Times1000,
     )

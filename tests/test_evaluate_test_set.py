@@ -6,7 +6,7 @@ from transformers import GPT2LMHeadModel, AutoTokenizer
 
 from conditionme import DecisionGPT2LMHeadModel
 from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
-from conditionme.normalization.normalizer import DoNothingNormalizer
+from conditionme.scaling.scaler import DoNothingScaler
 from examples.imdb.evaluate_imdb import evaluate_test_set
 from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 
@@ -34,14 +34,14 @@ def test_evaluate_test_set(tmp_path: Path):
     tiny_tokenizer = AutoTokenizer.from_pretrained("sshleifer/tiny-gpt2")
     decision_tokenizer = create_decision_tokenizer(tiny_tokenizer)
     sentiment_reward_model = MockImdbRewardModel(device="cpu")
-    normalizer = DoNothingNormalizer()
+    scaler = DoNothingScaler()
     save_dir = Path(tmp_path)
     evaluate_test_set(
         test_text=test_text,
         model=conditional_model,
         decision_tokenizer=decision_tokenizer,
         sentiment_reward=sentiment_reward_model,
-        normalizer=normalizer,
+        scaler=scaler,
         limit=10,
         save_dir=save_dir,
     )

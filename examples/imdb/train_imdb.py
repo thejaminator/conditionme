@@ -17,18 +17,17 @@ from transformers import (
     GPT2LMHeadModel,
 )
 
-from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer, DecisionTokenizer
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
-from conditionme.normalization.normalizer import (
-    RewardNormalizer,
-    NormalizerOptions,
-    get_normalizer,
+from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2, create_decision_tokenizer, DecisionTokenizer
+from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
+from conditionme.scaling.scaler import (
+    RewardScaler,
+    get_scaler, ScalerOptions,
 )
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
 from examples.imdb.evaluate_imdb import evaluate_test_set
-from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 
 
 class GPT2ModelOptions(Enum):
@@ -39,14 +38,14 @@ class GPT2ModelOptions(Enum):
     gpt2_xl = "gpt2-xl"
 
 
-def batch_normalize(
+def batch_scale(
     batch: BatchEncoding,
-    normalizer: RewardNormalizer,
+    scaler: RewardScaler,
 ) -> BatchEncoding:
-    # normalize the reward
-    normalized_reward = normalizer.normalize_rewards(batch["target_rewards"])
-    # replace the reward with the normalized reward
-    batch["target_rewards"] = normalized_reward
+    # scale the reward
+    scaled_reward = scaler.scale_rewards(batch["target_rewards"])
+    # replace the reward with the scaled reward
+    batch["target_rewards"] = scaled_reward
     return batch
 
 
@@ -60,14 +59,12 @@ def train_imdb(
     # must contain "train", "test", and "text" keys
     dataset: Union[DatasetDict, Dataset],
     reward_model: ImdbRewardModel,
-    normalizer_type: Type[RewardNormalizer],
+    scaler_type: Type[RewardScaler],
 ) -> None:
 
     dataset_tokenized: Dataset = dataset.map(  # type: ignore
         # batched
-        lambda examples: {
-            "target_rewards": reward_model.reward_batch(examples["text"], batch_size=32)
-        },
+        lambda examples: {"target_rewards": reward_model.reward_batch(examples["text"], batch_size=32)},
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
@@ -79,23 +76,21 @@ def train_imdb(
         batch_size=batch_size,  # We don't have to pad so much if batch_size is smaller
         batched=True,
     )
-    normalizer: RewardNormalizer = normalizer_type.from_rewards(
+    scaler: RewardScaler = scaler_type.from_rewards(
         rewards=dataset_tokenized["train"]["target_rewards"]  # type: ignore
     )
-    # update the dataset with the normalized rewards
-    normalized_dataset = dataset_tokenized.map(
-        lambda x: batch_normalize(x, normalizer=normalizer), batched=True
-    )
+    # update the dataset with the scaled rewards
+    scaled_dataset = dataset_tokenized.map(lambda x: batch_scale(x, scaler=scaler), batched=True)
 
-    # Save the normalizer
-    normalizer.save_normalizer(Path(save_dir))
+    # Save the scaler
+    scaler.save_scaler(Path(save_dir))
 
     # log training target_rewards
     training_reward_dist = calculate_distribution_statistics(
-        dist=normalized_dataset["train"]["target_rewards"]  # type: ignore
+        dist=scaled_dataset["train"]["target_rewards"]  # type: ignore
     )
     print(f"Training target_rewards distribution: {training_reward_dist}")
-    normalized_dataset.set_format(
+    scaled_dataset.set_format(
         type="torch",
         columns=[
             "input_ids",
@@ -119,24 +114,22 @@ def train_imdb(
     trainer = Trainer(
         model=decision_model,
         args=training_args,
-        train_dataset=normalized_dataset["train"],
+        train_dataset=scaled_dataset["train"],
         tokenizer=decision_tokenizer,
-        data_collator=DataCollatorForLanguageModeling(
-            tokenizer=decision_tokenizer, mlm=False
-        ),
+        data_collator=DataCollatorForLanguageModeling(tokenizer=decision_tokenizer, mlm=False),
     )
     trainer.train()
 
     # Save the model
     decision_model.save_pretrained(save_dir)
-    test_text: List[str] = normalized_dataset["test"]["text"]  # type: ignore [call-overload]
+    test_text: List[str] = scaled_dataset["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
         model=decision_model,
         decision_tokenizer=decision_tokenizer,
         sentiment_reward=reward_model,
         limit=1000,
-        normalizer=normalizer,
+        scaler=scaler,
         save_dir=Path(save_dir),
     )
 
@@ -148,10 +141,10 @@ def main(
     model: GPT2ModelOptions = GPT2ModelOptions.gpt2,
     learning_rate: float = 5e-5,
     device: Optional[str] = None,
-    normalizer: NormalizerOptions = NormalizerOptions.do_nothing,
+    scaler: ScalerOptions = ScalerOptions.do_nothing,
 ):
 
-    normalizer_type: Type[RewardNormalizer] = get_normalizer(normalizer)
+    scaler_type: Type[RewardScaler] = get_scaler(scaler)
     # Optionally save to drive
     # from google.colab import drive
     # drive.mount('/content/gdrive')
@@ -164,17 +157,13 @@ def main(
     device_selected: torch.device = (
         torch.device(device)
         if device
-        else (
-            torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        )
+        else (torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu"))
     )
     sentiment_reward = ImdbRewardModel(device=device_selected)
     tokenizer = AutoTokenizer.from_pretrained("gpt2", padding_side="left")
     decision_tokenizer = create_decision_tokenizer(tokenizer)
     loaded_model = GPT2LMHeadModel.from_pretrained(model.value)
-    gpt2_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(
-        device
-    )
+    gpt2_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model).to(device)
     train_imdb(
         batch_size=batch_size,
         epochs=epochs,
@@ -184,12 +173,12 @@ def main(
         learning_rate=learning_rate,
         dataset=imdb_dataset,
         reward_model=sentiment_reward,
-        normalizer_type=normalizer_type,
+        scaler_type=scaler_type,
     )
 
 
 if __name__ == "__main__":
     # run with
     # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 10 --epochs 1
-    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-medium --save-dir saved_medium --normalizer min_max
+    # export PYTHONPATH=.; python examples/imdb/train_imdb.py --batch-size 1 --epochs 1 --model gpt2-medium --save-dir saved_medium --scaler min_max
     typer.run(main)

@@ -9,18 +9,18 @@ from slist import Slist
 from conditionme.type_check.utils import assert_not_none, assert_never
 
 
-class RewardNormalizer(ABC):
+class RewardScaler(ABC):
     @staticmethod
     @abstractmethod
-    def from_rewards(rewards: Sequence[float]) -> "RewardNormalizer":
+    def from_rewards(rewards: Sequence[float]) -> "RewardScaler":
         raise NotImplementedError
 
     @abstractmethod
-    def normalize_reward(self, reward: float) -> float:
+    def scale_reward(self, reward: float) -> float:
         raise NotImplementedError
 
-    def normalize_rewards(self, rewards: Sequence[float]) -> List[float]:
-        return [self.normalize_reward(reward) for reward in rewards]
+    def scale_rewards(self, rewards: Sequence[float]) -> List[float]:
+        return [self.scale_reward(reward) for reward in rewards]
 
     @classmethod
     def name(cls) -> str:
@@ -33,41 +33,41 @@ class RewardNormalizer(ABC):
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
 
-    def save_normalizer(self, path: Path) -> None:
+    def save_scaler(self, path: Path) -> None:
         # Create the directory if it does not exist
         path.mkdir(parents=True, exist_ok=True)
-        file_path = path / "normalizer"
+        file_path = path / "scaler"
         with open(file_path, "w") as f:
-            print(f"Saving normalizer to {file_path}")
+            print(f"Saving scaler to {file_path}")
             f.write(self.to_json())
 
     @classmethod
-    def load_normalizer(cls, path: Path) -> "RewardNormalizer":
-        file_path = path / "normalizer"
+    def load_scaler(cls, path: Path) -> "RewardScaler":
+        file_path = path / "scaler"
         with open(file_path, "r") as f:
-            print(f"Loading normalizer from {file_path}")
+            print(f"Loading scaler from {file_path}")
             _dict = json.load(f)
         return cls.create_from_dict(_dict)
 
     @staticmethod
-    def create_from_dict(_dict: Dict[str, Any]) -> "RewardNormalizer":
+    def create_from_dict(_dict: Dict[str, Any]) -> "RewardScaler":
         name = _dict["name"]
-        if name == MinMaxNormalizer.name():
-            return MinMaxNormalizer.from_dict(_dict)
-        elif name == StandardScaleNormalizer.name():
-            return StandardScaleNormalizer.from_dict(_dict)
-        elif name == DoNothingNormalizer.name():
-            return DoNothingNormalizer()
+        if name == MinMaxScaler.name():
+            return MinMaxScaler.from_dict(_dict)
+        elif name == StandardScaleScaler.name():
+            return StandardScaleScaler.from_dict(_dict)
+        elif name == DoNothingScaler.name():
+            return DoNothingScaler()
         elif name == Times1000.name():
             return Times1000()
-        elif name == StandardTimes1000Normalizer.name():
-            return StandardTimes1000Normalizer.from_dict(_dict)
+        elif name == StandardTimes1000Scaler.name():
+            return StandardTimes1000Scaler.from_dict(_dict)
         else:
-            raise ValueError(f"Unknown normalizer name: {name}")
+            raise ValueError(f"Unknown scaler name: {name}")
 
 
-class MinMaxNormalizer(RewardNormalizer):
-    # A normalizer that will normalize the rewards to be between 0 and 1
+class MinMaxScaler(RewardScaler):
+    # A scaler that will scale the rewards to be between 0 and 1
     def __init__(
         self,
         reward_min: float,
@@ -77,16 +77,16 @@ class MinMaxNormalizer(RewardNormalizer):
         self.reward_max = reward_max
 
     @staticmethod
-    def from_rewards(rewards: Sequence[float]) -> "MinMaxNormalizer":
+    def from_rewards(rewards: Sequence[float]) -> "MinMaxScaler":
         rewards_min: float = min(rewards)
         rewards_max: float = max(rewards)
 
-        return MinMaxNormalizer(
+        return MinMaxScaler(
             reward_min=rewards_min,
             reward_max=rewards_max,
         )
 
-    def normalize_reward(self, reward: float) -> float:
+    def scale_reward(self, reward: float) -> float:
         return (reward - self.reward_min) / (self.reward_max - self.reward_min)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -97,35 +97,35 @@ class MinMaxNormalizer(RewardNormalizer):
         }
 
     @staticmethod
-    def from_dict(_dict: Dict[str, Any]) -> "MinMaxNormalizer":
+    def from_dict(_dict: Dict[str, Any]) -> "MinMaxScaler":
         reward_min = _dict["reward_min"]
         reward_max = _dict["reward_max"]
-        return MinMaxNormalizer(
+        return MinMaxScaler(
             reward_min=reward_min,
             reward_max=reward_max,
         )
 
 
-class DoNothingNormalizer(RewardNormalizer):
+class DoNothingScaler(RewardScaler):
     def __init__(self):
         pass
 
     @staticmethod
-    def from_rewards(rewards: Sequence[float]) -> "DoNothingNormalizer":
-        return DoNothingNormalizer()
+    def from_rewards(rewards: Sequence[float]) -> "DoNothingScaler":
+        return DoNothingScaler()
 
-    def normalize_reward(self, reward: float) -> float:
+    def scale_reward(self, reward: float) -> float:
         return reward
 
     def to_dict(self) -> Dict[str, Any]:
         return {"name": self.name()}
 
     @staticmethod
-    def from_dict(_dict: Dict[str, Any]) -> "DoNothingNormalizer":
-        return DoNothingNormalizer()
+    def from_dict(_dict: Dict[str, Any]) -> "DoNothingScaler":
+        return DoNothingScaler()
 
 
-class Times1000(RewardNormalizer):
+class Times1000(RewardScaler):
     def __init__(self):
         pass
 
@@ -133,7 +133,7 @@ class Times1000(RewardNormalizer):
     def from_rewards(rewards: Sequence[float]) -> "Times1000":
         return Times1000()
 
-    def normalize_reward(self, reward: float) -> float:
+    def scale_reward(self, reward: float) -> float:
         return reward * 1000
 
     def to_dict(self) -> Dict[str, Any]:
@@ -144,7 +144,7 @@ class Times1000(RewardNormalizer):
         return Times1000()
 
 
-class StandardScaleNormalizer(RewardNormalizer):
+class StandardScaleScaler(RewardScaler):
     def __init__(
         self,
         mean: float,
@@ -157,12 +157,12 @@ class StandardScaleNormalizer(RewardNormalizer):
     def from_rewards(rewards: Sequence[float]):
         mean: float = assert_not_none(Slist(rewards).average())
         std: float = assert_not_none(Slist(rewards).standard_deviation())
-        return StandardScaleNormalizer(
+        return StandardScaleScaler(
             mean=mean,
             std=std,
         )
 
-    def normalize_reward(self, reward: float) -> float:
+    def scale_reward(self, reward: float) -> float:
         return (reward - self.mean) / self.std
 
     def to_dict(self) -> Dict[str, Any]:
@@ -173,24 +173,24 @@ class StandardScaleNormalizer(RewardNormalizer):
         }
 
     @staticmethod
-    def from_dict(_dict: Dict[str, Any]) -> "StandardScaleNormalizer":
+    def from_dict(_dict: Dict[str, Any]) -> "StandardScaleScaler":
         mean = _dict["mean"]
         std = _dict["std"]
-        return StandardScaleNormalizer(
+        return StandardScaleScaler(
             mean=mean,
             std=std,
         )
 
 
-class StandardTimes1000Normalizer(StandardScaleNormalizer):
+class StandardTimes1000Scaler(StandardScaleScaler):
     # https://github.com/huggingface/blog/blob/main/train-decision-transformers.md
     # Says that the implementation of decision transformers scale the rewards by 1000
-    def normalize_reward(self, reward: float) -> float:
-        return 1000 * super().normalize_reward(reward)
+    def scale_reward(self, reward: float) -> float:
+        return 1000 * super().scale_reward(reward)
 
 
-# Enum of normalizers
-class NormalizerOptions(str, Enum):
+# Enum of scalers
+class ScalerOptions(str, Enum):
     min_max = "min_max"
     standard_scale = "standard_scale"
     standard_times_1000 = "standard_times_1000"
@@ -198,16 +198,16 @@ class NormalizerOptions(str, Enum):
     times_1000 = "times_1000"
 
 
-def get_normalizer(normalizer_option: NormalizerOptions) -> Type[RewardNormalizer]:
-    if normalizer_option is NormalizerOptions.min_max:
-        return MinMaxNormalizer
-    elif normalizer_option is NormalizerOptions.standard_scale:
-        return StandardScaleNormalizer
-    elif normalizer_option is NormalizerOptions.standard_times_1000:
-        return StandardTimes1000Normalizer
-    elif normalizer_option is NormalizerOptions.do_nothing:
-        return DoNothingNormalizer
-    elif normalizer_option is NormalizerOptions.times_1000:
+def get_scaler(scaler_option: ScalerOptions) -> Type[RewardScaler]:
+    if scaler_option is ScalerOptions.min_max:
+        return MinMaxScaler
+    elif scaler_option is ScalerOptions.standard_scale:
+        return StandardScaleScaler
+    elif scaler_option is ScalerOptions.standard_times_1000:
+        return StandardTimes1000Scaler
+    elif scaler_option is ScalerOptions.do_nothing:
+        return DoNothingScaler
+    elif scaler_option is ScalerOptions.times_1000:
         return Times1000
     else:
-        assert_never(normalizer_option)
+        assert_never(scaler_option)

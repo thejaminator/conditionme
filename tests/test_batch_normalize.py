@@ -2,9 +2,9 @@ from typing import List
 
 from datasets import Dataset, DatasetDict
 
-from conditionme.normalization.normalizer import Times1000
+from conditionme.scaling.scaler import Times1000
 from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
-from examples.imdb.train_imdb import batch_normalize
+from examples.imdb.train_imdb import batch_scale
 
 
 def test_batch_normalize():
@@ -35,8 +35,8 @@ def test_batch_normalize():
         },
         batched=True,
     )
-    normalizer = Times1000()
+    scaler = Times1000()
     dataset_normalized = dataset_rewarded.map(
-        lambda x: batch_normalize(x, normalizer=normalizer), batched=True
+        lambda x: batch_scale(x, scaler=scaler), batched=True
     )
     assert dataset_normalized["train"]["target_rewards"][0] == 1000  # type: ignore

@@ -9,11 +9,11 @@ from transformers import AutoTokenizer
 
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
-from conditionme.normalization.normalizer import RewardNormalizer
 from conditionme.completion.complete_model import (
     PromptCompletion,
     complete_text_with_reward_batched,
 )
+from conditionme.scaling.scaler import RewardScaler
 from conditionme.statistics.calculate_distribution import (
     calculate_distribution_statistics,
 )
@@ -33,14 +33,12 @@ def evaluate_test_set(
     model: DecisionGPT2LMHeadModel,
     decision_tokenizer: AutoTokenizer,
     sentiment_reward: ImdbRewardModel,
-    normalizer: RewardNormalizer,
+    scaler: RewardScaler,
     limit: int,
     save_dir: Path,
 ) -> None:
     # convert into a list of space separated tokens
-    test_text_tokenized: List[List[str]] = [
-        text.split(" ") for text in test_text[:limit]
-    ]
+    test_text_tokenized: List[List[str]] = [text.split(" ") for text in test_text[:limit]]
     # take the first 3 tokens from each list
     first_3_tokens_list: List[List[str]] = [text[:3] for text in test_text_tokenized]
     # join the first 3 tokens into a string
@@ -51,14 +49,14 @@ def evaluate_test_set(
         prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_rewards=normalizer.normalize_rewards(high_target_rewards),
+        target_rewards=scaler.scale_rewards(high_target_rewards),
     )
     low_target_rewards = [0.0] * len(first_3_tokens)
     low_reward_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_rewards=normalizer.normalize_rewards(low_target_rewards),
+        target_rewards=scaler.scale_rewards(low_target_rewards),
     )
 
     # Use the reward model to compute the actual reward of the completions
@@ -83,32 +81,26 @@ def evaluate_test_set(
         target_rewards=high_target_rewards,
         actual_rewards=high_target_actual_reward,
     )
-    reward_evaluation_table(high_reward_rows).to_csv(
-        save_dir / "high_reward_completions.csv", index=False
-    )
+    reward_evaluation_table(high_reward_rows).to_csv(save_dir / "high_reward_completions.csv", index=False)
 
     low_reward_rows = reward_evaluation_rows(
         prompt_completions=low_reward_completions,
         target_rewards=low_target_rewards,
         actual_rewards=low_target_actual_reward,
     )
-    reward_evaluation_table(low_reward_rows).to_csv(
-        save_dir / "low_reward_completions.csv", index=False
-    )
+    reward_evaluation_table(low_reward_rows).to_csv(save_dir / "low_reward_completions.csv", index=False)
 
     # Randomly sample target rewards to plot correlation graph
     # Sample from a uniform distribution of 0 to 1 since those are the lower and upper bounds of the target rewards
     sampled_target_rewards = np.random.uniform(0, 1, size=len(first_3_tokens))
-    # Use the normalizer to normalize the target rewards
-    normalized_target_rewards = normalizer.normalize_rewards(
-        sampled_target_rewards.tolist()
-    )
+    # Use the scaler to scale the target rewards
+    scaled_target_rewards = scaler.scale_rewards(sampled_target_rewards.tolist())
     # complete the text
     sampled_completions: List[PromptCompletion] = complete_text_with_reward_batched(
         prompts=first_3_tokens,
         model=model,
         tokenizer=decision_tokenizer,
-        target_rewards=normalized_target_rewards,
+        target_rewards=scaled_target_rewards,
     )
     # Use the reward model to compute the actual reward of the completions
     sampled_actual_rewards: List[float] = sentiment_reward.reward_batch(
@@ -117,12 +109,10 @@ def evaluate_test_set(
     # create csv of rewards
     sampled_rows = reward_evaluation_rows(
         prompt_completions=sampled_completions,
-        target_rewards=normalized_target_rewards,
+        target_rewards=scaled_target_rewards,
         actual_rewards=sampled_actual_rewards,
     )
-    reward_evaluation_table(sampled_rows).to_csv(
-        save_dir / "sampled_completions.csv", index=False
-    )
+    reward_evaluation_table(sampled_rows).to_csv(save_dir / "sampled_completions.csv", index=False)
     # Plot the correlation graph
     plot_results = plot_scatterplot_and_correlation(
         x=sampled_target_rewards.tolist(),
@@ -136,11 +126,9 @@ def evaluate_test_set(
 
 
 def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
-    device: torch.device = (
-        torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-    )
-    # Load the normalizer
-    normalizer = RewardNormalizer.load_normalizer(Path(save_dir))
+    device: torch.device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    # Load the scaler
+    scaler = RewardScaler.load_scaler(Path(save_dir))
     print(f"Loading model from {save_dir}")
     # Load the model using the device
     model = DecisionGPT2LMHeadModel.from_pretrained(save_dir).to(device)
@@ -152,11 +140,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         "imdb"
     ).map(
         # batched
-        lambda examples: {
-            "target_rewards": sentiment_reward.reward_batch(
-                examples["text"], batch_size=32
-            )
-        },
+        lambda examples: {"target_rewards": sentiment_reward.reward_batch(examples["text"], batch_size=32)},
         batched=True,
     ).map(
         lambda x: batch_tokenize_gpt2(
@@ -167,9 +151,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         ),
         batched=True,
     )
-    dataset_tokenized.set_format(
-        type="torch", columns=["input_ids", "target_rewards", "attention_mask"]
-    )
+    dataset_tokenized.set_format(type="torch", columns=["input_ids", "target_rewards", "attention_mask"])
     test_text: List[str] = dataset_tokenized["test"]["text"]  # type: ignore [call-overload]
     evaluate_test_set(
         test_text=test_text,
@@ -177,7 +159,7 @@ def main(save_dir: str = "gdrive/My Drive/conditionme", limit: int = 1000):
         decision_tokenizer=tokenizer,
         sentiment_reward=sentiment_reward,
         limit=limit,
-        normalizer=normalizer,
+        scaler=scaler,
         save_dir=Path(save_dir),
     )
 
