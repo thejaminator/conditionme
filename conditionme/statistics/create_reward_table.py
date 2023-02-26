@@ -4,7 +4,7 @@ from typing import Sequence, Dict
 import pandas as pd
 from slist import Slist
 
-from conditionme.rollout.rollout_model import PromptCompletion
+from conditionme.completion.complete_model import PromptCompletion
 
 
 @dataclasses.dataclass

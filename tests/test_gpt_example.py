@@ -13,7 +13,7 @@ from transformers import (
 )
 
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
-from conditionme.rollout.rollout_model import (
+from conditionme.completion.complete_model import (
     complete_text_with_reward_batched,
     PromptCompletion,
 )

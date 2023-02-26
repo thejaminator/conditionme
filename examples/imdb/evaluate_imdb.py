@@ -10,7 +10,7 @@ from transformers import AutoTokenizer
 from conditionme.decision_gpt2_tokenize import batch_tokenize_gpt2
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.normalization.normalizer import RewardNormalizer
-from conditionme.rollout.rollout_model import (
+from conditionme.completion.complete_model import (
     PromptCompletion,
     complete_text_with_reward_batched,
 )
