@@ -55,15 +55,16 @@ Ready to contribute? Here's how to set up `conditionme` for local development.
     $ git clone git@github.com:your_name_here/conditionme.git
     ```
 
-3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
-4. Install dependencies and start your virtualenv:
+3. Install dependencies and start your virtualenv:
 
     ```
-    $ pip install poetry
-    $ poetry install
+    $ python -m venv venv
+    $ source venv/bin/activate
+    $ pip install -r requirements.txt
     ```
 
-5. Create a branch for local development:
+
+4. Create a branch for local development:
 
     ```
     $ git checkout -b name-of-your-bugfix-or-feature
@@ -71,14 +72,14 @@ Ready to contribute? Here's how to set up `conditionme` for local development.
 
     Now you can make your changes locally.
 
-6. When you're done making changes, check that your changes pass the
+5. When you're done making changes, check that your changes pass the
    tests, including testing other Python versions, with tox:
 
     ```
-    $ poetry run pytest tests
+    $ pytest tests
     ```
 
-7. Commit your changes and push your branch to GitHub:
+6. Commit your changes and push your branch to GitHub:
 
     ```
     $ git add .
@@ -86,7 +87,7 @@ Ready to contribute? Here's how to set up `conditionme` for local development.
     $ git push origin name-of-your-bugfix-or-feature
     ```
 
-8. Submit a pull request through the GitHub website.
+7. Submit a pull request through the GitHub website.
 
 ## Pull Request Guidelines
 
@@ -96,14 +97,14 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.md.
-3. The pull request should work for Python 3.6, 3.7, 3.8 and 3.9. Check
+3. The pull request should work for Python 3.8 and 3.9. Check
    https://github.com/thejaminator/conditionme/actions
    and make sure that the tests pass for all supported Python versions.
 
 ## Tips
 
 ```
-$ poetry run pytest tests
+$ pytest tests
 ```
 
 To run a subset of tests.
