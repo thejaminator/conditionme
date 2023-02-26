@@ -147,7 +147,7 @@ You'll also won't have a linear layer on top of that reward's token's hidden sta
 
 ## TODO list
 - [x] Validate that it works on a toy example
-- [ ] Reach out to others and ask if the hack makes sense
+- [x] Reach out to others and ask if the hack makes sense
 - [x] Add support for huggingface pretrained models saving
 - [x] Add collab notebook for toy example
 - [ ] Add more tests for tokenization and the position/attention/label modifications
