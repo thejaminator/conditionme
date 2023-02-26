@@ -53,7 +53,7 @@ def batch_normalize(
 def train_imdb(
     batch_size: int,
     epochs: int,
-    save_dir: str,
+    save_dir: Path,
     decision_tokenizer: DecisionTokenizer,
     decision_model: DecisionGPT2LMHeadModel,
     learning_rate: float,
@@ -178,7 +178,7 @@ def main(
     train_imdb(
         batch_size=batch_size,
         epochs=epochs,
-        save_dir=save_dir,
+        save_dir=Path(save_dir),
         decision_tokenizer=decision_tokenizer,
         decision_model=gpt2_model,
         learning_rate=learning_rate,

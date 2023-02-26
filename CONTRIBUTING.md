@@ -73,10 +73,11 @@ Ready to contribute? Here's how to set up `conditionme` for local development.
     Now you can make your changes locally.
 
 5. When you're done making changes, check that your changes pass the
-   tests, including testing other Python versions, with tox:
+   tests.
 
     ```
     $ pytest tests
+    $ dmypy run
     ```
 
 6. Commit your changes and push your branch to GitHub:

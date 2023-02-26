@@ -15,7 +15,7 @@ from transformers.modeling_utils import PreTrainedModel
 
 from conditionme.modify_forward_inputs import (
     NewForwardInputs,
-    forward_inputs_with_rewards,
+    _forward_inputs_with_rewards, new_forward_inputs,
 )
 
 
@@ -82,38 +82,16 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
         """
         return_dict = return_dict if return_dict is not None else self.pretrained_model.config.use_return_dict
         # START OF EDITS
-        new_inputs: NewForwardInputs = (
-            # If we are using past key values, we have already added the reward embedding to the input
-            # So here we just pass the existing inputs
-            # todo: refactor
-            NewForwardInputs(
-                attention_mask=torch.cat(
-                    [
-                        # Attention mask is (batch_size, sequence_length)
-                        # add a 1 to the attention mask to account for the reward embedding
-                        torch.ones(attention_mask.shape[0], 1, device=attention_mask.device),
-                        attention_mask,
-                    ],
-                    dim=1,
-                )
-                if attention_mask is not None
-                else None,
-                inputs_embeds=self.pretrained_model.transformer.wte(input_ids),
-                position_ids=position_ids,
-                labels=labels,
-            )
-            if past_key_values and len(past_key_values) > 0
-            else forward_inputs_with_rewards(
-                reward_embedding=self.embed_return,
-                wte_embedding=self.pretrained_model.transformer.wte,
-                target_rewards=target_rewards,
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                position_ids=position_ids,
-                labels=labels,
-            )
+        new_inputs: NewForwardInputs = new_forward_inputs(
+            past_key_values=past_key_values,
+            reward_embedding=self.embed_return,
+            wte_embedding=self.pretrained_model.transformer.wte,
+            target_rewards=target_rewards,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            position_ids=position_ids,
+            labels=labels,
         )
-
         transformer_outputs = self.pretrained_model.transformer.forward(
             inputs_embeds=new_inputs.inputs_embeds,
             past_key_values=past_key_values,
@@ -129,7 +107,6 @@ class DecisionGPT2LMHeadModel(PreTrainedModel):
             return_dict=return_dict,
         )
         labels = new_inputs.labels
-
         # END OF EDITS
 
         hidden_states = transformer_outputs[0]

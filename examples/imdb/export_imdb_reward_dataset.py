@@ -6,7 +6,7 @@ from conditionme.reward_models.imdb_reward_model import ImdbRewardModel
 if __name__ == "__main__":
     gpu_device = torch.device("cuda:0")
     sentiment_reward = ImdbRewardModel(device=gpu_device)
-    dataset_rewarded_dict: DatasetDict = load_dataset("imdb").map(
+    dataset_rewarded_dict: DatasetDict = load_dataset("imdb").map(  # type: ignore
         # batched
         lambda examples: {"target_rewards": sentiment_reward.reward_batch(examples["text"], batch_size=32)},
         batched=True,

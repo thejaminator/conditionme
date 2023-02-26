@@ -1,3 +1,3 @@
 from logging import Logger
 
-logger = Logger("tconrl")
+logger = Logger("conditionme")
