@@ -14,22 +14,46 @@ There could be some aspects for training in a decision transformer fashion that 
 
 
 This library helps you investigate decision transformers empirically by:
-1. Providing a compatible tokenizer - what we'll call a DecisionTokenizer. Among other things, it reduces `model_max_length` by 1 so that we can reserve the first token for the reward token.  
+1. Providing a compatible tokenizer - what we'll call a DecisionTokenizer. Among other things, it reduces `model_max_length` by 1 so that we can reserve the first token for the reward token.
+2. Providing a compatible model that takes into your scalar `target_rewards`. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token.
 ```python
-from transformers import AutoTokenizer
-from conditionme import create_decision_tokenizer
+from transformers import AutoTokenizer, GPT2LMHeadModel
+from conditionme import create_decision_tokenizer, DecisionGPT2LMHeadModel
+import torch
+
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
 decision_tokenizer = create_decision_tokenizer(tokenizer)
-```
-2. Providing a compatible model that takes into your scalar `target_rewards`. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token. 
-
-```python
-from transformers import GPT2LMHeadModel
-from conditionme import DecisionGPT2LMHeadModel
 
 loaded_model = GPT2LMHeadModel.from_pretrained("gpt2")
 decision_model = DecisionGPT2LMHeadModel.from_loaded_pretrained_model(loaded_model)
+encoded_text = decision_tokenizer.encode("this is a test")
+generated = decision_model.generate(
+    input_ids=torch.tensor([encoded_text]),
+    # you'll need to provide target_rewards
+    # this should be the same length as input_ids
+    target_rewards=torch.tensor([1.0]),
+)
+generated_text = decision_tokenizer.decode(generated[0])
 ```
+
+When training, you'll need to provide a `target_rewards` a column in your dataset.
+
+```python
+from transformers import (
+    Trainer,
+    DataCollatorForLanguageModeling,
+)
+
+trainer = Trainer(
+    model=decision_model,
+    args=training_args,
+    # dataset should have a column `target_rewards`
+    train_dataset=dataset["train"],
+    tokenizer=decision_tokenizer,
+    data_collator=DataCollatorForLanguageModeling(tokenizer=decision_tokenizer, mlm=False),
+)
+```
+
 
 ## Toy example - Imdb sentiment analysis
 Using gpt-large as our pretrained model, we finetune our model to match our target reward.
