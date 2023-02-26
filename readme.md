@@ -18,7 +18,7 @@ This library helps you investigate decision transformers empirically by:
 2. Providing a compatible model that takes into your scalar `target_rewards`. Currently, we only support gpt2. The DecisionGPT2LMHeadModel takes in `target_rewards` as an additional argument to the forward method. It will automatically offset / modify provided attention_masks, position_ids and labels to account for the reward token.
 ```python
 from transformers import AutoTokenizer, GPT2LMHeadModel
-from conditionme import create_decision_tokenizer, DecisionGPT2LMHeadModel
+from conditionme import create_decision_tokenizer, DecisionGPT2LMHeadModel, complete_text_with_reward
 import torch
 
 tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -34,6 +34,15 @@ generated = decision_model.generate(
     target_rewards=torch.tensor([1.0]),
 )
 generated_text = decision_tokenizer.decode(generated[0])
+# We also provide helper functions to make it easier to use
+another_completion = complete_text_with_reward(
+    prompt="this is a test",
+    model=decision_model,
+    target_reward=1.0,
+    tokenizer=decision_tokenizer,
+    temperature=1.0,
+    max_new_tokens=200,
+)
 ```
 
 When training, you'll need to provide a `target_rewards` a column in your dataset.

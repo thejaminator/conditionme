@@ -1,2 +1,3 @@
 from conditionme.decision_gpt2_lm_head import DecisionGPT2LMHeadModel
 from conditionme.decision_gpt2_tokenize import create_decision_tokenizer
+from conditionme.completion.complete_model import complete_text_with_reward
