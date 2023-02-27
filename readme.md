@@ -1,5 +1,5 @@
 ## Introduction
-`conditionme` is library for easily retraining existing language models to work in a conditional /decision tranformer / upside down rl fashion.
+`conditionme` is library to easily retrain existing language models to work in a conditional / decision transformer / rl fashion.
 
 We eventually hope it can be something similar to [trl](https://github.com/lvwerra/trl), just that instead of PPO we'll train in a decision transformer fashion.
 This still a very early stage library, so expect bugs and missing features.
