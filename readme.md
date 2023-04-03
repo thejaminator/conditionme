@@ -168,9 +168,11 @@ What we do is:
 This is the value add of the library, we should handle all this for you.
 
 ## Alternative means of conditioning RL
-As an alternative to this library, you can literally encode the reward as text input.
-
 Instead of using scalar rewards, you can have discrete rewards, and [encode them as tokens](https://arxiv.org/abs/2302.08582).
+One tradeoff of discrete rewards is that you cannot encode a reward that is outside of the range of the discrete rewards.
+For example, with a continuous reward you can encode a target reward of 2.0, which is outside the range of your training set from 0.0 to 1.0.
+With discrete rewards, you cannot encode an out-of-distribution reward. In the original Decision Transformer paper, 
+they showed that the models may generalize to rewards outside of the training reward distribution, so you may lose that useful property. 
 
 You also can try and encode the reward literally as text that contains the numbers of the reward.
 [I demonstrate it here](https://github.com/thejaminator/prompt_reward_rl/blob/main/documentation/main_page.md#ability-to-match-a-single-reward)
@@ -189,3 +191,4 @@ You'll also won't have a linear layer on top of that reward's token's hidden sta
 - [ ] Write docs on how to add support for arbitrary pretrained models that are not added yet.
 - [ ] Settings for prompt vs completion token loss
 - [ ] Add support for online training
+- [ ] Allow conditioning on multiple rewards?
